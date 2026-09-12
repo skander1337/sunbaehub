@@ -46,3 +46,10 @@ dev.db-*
 /uploads/*
 !/uploads/.gitkeep
 .impeccable/review/
+
+# local agent/tool configs and design-tool session state (machine-specific)
+.claude/
+.codex/
+.grok/
+.impeccable/config.local.json
+.impeccable/questions/
