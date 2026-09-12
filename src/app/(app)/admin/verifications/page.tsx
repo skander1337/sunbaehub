@@ -35,17 +35,13 @@ export default async function VerificationsPage() {
                 <div>
                   <div className="text-[12.5px] font-semibold text-ink-3">{t("profile.education")}</div>
                   {p.education.map((e, i) => (
-                    <div key={i}>
-                      {e.school} · {e.major} · {e.degree} · <span className="tnum">{e.years}</span>
-                    </div>
+                    <div key={i} className="tnum">{[e.school, e.major, e.degree, e.years].filter(Boolean).join(" · ")}</div>
                   ))}
                 </div>
                 <div>
                   <div className="text-[12.5px] font-semibold text-ink-3">{t("profile.experience")}</div>
                   {p.experience.map((e, i) => (
-                    <div key={i}>
-                      {e.company} · {e.title} · <span className="tnum">{e.years}</span>
-                    </div>
+                    <div key={i} className="tnum">{[e.company, e.title, e.years].filter(Boolean).join(" · ")}</div>
                   ))}
                 </div>
               </div>

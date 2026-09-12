@@ -105,7 +105,7 @@ export default async function SpecialistPage({ params, searchParams }: { params:
               {profile.education.map((e, i) => (
                 <li key={i} className="text-[15px]">
                   <div className="font-semibold">{e.school}</div>
-                  <div className="muted text-[14px]">{e.major} · {e.degree} · <span className="tnum">{e.years}</span></div>
+                  <div className="muted tnum text-[14px]">{[e.major, e.degree, e.years].filter(Boolean).join(" · ")}</div>
                 </li>
               ))}
             </ul>
@@ -116,7 +116,7 @@ export default async function SpecialistPage({ params, searchParams }: { params:
               {profile.experience.map((e, i) => (
                 <li key={i} className="text-[15px]">
                   <div className="font-semibold">{e.company}</div>
-                  <div className="muted text-[14px]">{e.title} · <span className="tnum">{e.years}</span></div>
+                  <div className="muted tnum text-[14px]">{[e.title, e.years].filter(Boolean).join(" · ")}</div>
                 </li>
               ))}
             </ul>

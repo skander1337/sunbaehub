@@ -51,7 +51,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
             t("cert.specialist"),
             <>
               {specialist.name}
-              {profile && <span className="muted block text-[13px] font-normal">{profile.headline} · {profile.education.map((e) => `${e.school} ${e.major}`).join(", ")}</span>}
+              {profile && <span className="muted block text-[13px] font-normal">{profile.headline} · {profile.education.map((e) => [e.school, e.major].filter(Boolean).join(" ")).join(", ")}</span>}
             </>,
           )}
           {row(t("cert.topic"), categoryLabel(b.category, locale))}
