@@ -39,6 +39,7 @@ export function createBooking(
   if (input.seekerId === input.specialistId) throw new BookingRuleError("own_profile");
   const profile = tx.select().from(specialistProfiles).where(eq(specialistProfiles.userId, input.specialistId)).get();
   if (!profile) throw new SlotUnavailable();
+  if (profile.verification !== "verified") throw new BookingRuleError("not_verified");
   const { rules, busy } = loadAvailability(tx, input.specialistId, now);
   const days = computeSlots(rules, busy, now, { slotMin: durationMin, stepMin: BRAND.slotStepMinutes });
   if (!slotExists(days, input.startAt)) throw new SlotUnavailable();
@@ -115,10 +116,13 @@ export function endSession(tx: Tx | Db, bookingId: string, byUserId: string, now
 export function devShiftBooking(tx: Tx | Db, bookingId: string, mode: "start_now" | "end_now", now: Date): void {
   const b = tx.select().from(bookings).where(eq(bookings.id, bookingId)).get();
   if (!b) return;
+  const durationMs = b.durationMin * 60_000;
   if (mode === "start_now" && b.status === "confirmed") {
-    tx.update(bookings).set({ startAt: new Date(now.getTime() - 60_000), endAt: new Date(now.getTime() + 59 * 60_000) }).where(eq(bookings.id, b.id)).run();
+    const startAt = new Date(now.getTime() - 60_000);
+    tx.update(bookings).set({ startAt, endAt: new Date(startAt.getTime() + durationMs) }).where(eq(bookings.id, b.id)).run();
   }
   if (mode === "end_now" && (b.status === "confirmed" || b.status === "in_progress")) {
-    tx.update(bookings).set({ endAt: new Date(now.getTime() - 6 * 60_000) }).where(eq(bookings.id, b.id)).run();
+    const endAt = new Date(now.getTime() - 6 * 60_000);
+    tx.update(bookings).set({ startAt: new Date(endAt.getTime() - durationMs), endAt }).where(eq(bookings.id, b.id)).run();
   }
 }

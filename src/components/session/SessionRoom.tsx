@@ -223,7 +223,7 @@ export function SessionRoom(p: Props) {
         </div>
       </div>
 
-      {inCall && (
+      {p.phase === "open" && inCall && (
         <div className="flex items-center justify-between gap-3 bg-ink px-4 py-3 text-white">
           <div className="flex items-center gap-3">
             <span className="relative flex h-2.5 w-2.5">

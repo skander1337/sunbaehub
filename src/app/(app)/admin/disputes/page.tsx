@@ -73,7 +73,7 @@ export default async function DisputesPage() {
           <ul className="mt-3 divide-y divide-line border-y border-line text-[13.5px]">
             {done.map(({ d, b, seeker: sk, specialist: sp }) => (
               <li key={d.id} className="flex flex-wrap items-center gap-2 py-2.5">
-                <span className={`tag ${d.status === "approved" ? "tag-danger" : "tag-neutral"}`}>{d.status}</span>
+                <span className={`tag ${d.status === "approved" ? "tag-danger" : "tag-neutral"}`}>{d.status === "approved" ? t("requestStatus.approved") : d.status === "rejected" ? t("requestStatus.rejected") : d.status}</span>
                 <span>
                   {sk} → {sp} · <span className="tnum">{t("common.creditsN", { n: b.price })}</span>
                 </span>

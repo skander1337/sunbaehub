@@ -75,7 +75,7 @@ export default async function EarningsPage({ searchParams }: { searchParams: Pro
             {withdrawals.map((w) => (
               <li key={w.id} className="flex items-center justify-between gap-3 py-3 text-[14px]">
                 <div>
-                  <span className={`tag ${w.status === "paid" ? "tag-success" : w.status === "pending" ? "tag-warn" : "tag-neutral"}`}>{w.status}</span>
+                  <span className={`tag ${w.status === "paid" ? "tag-success" : w.status === "pending" ? "tag-warn" : "tag-neutral"}`}>{w.status === "paid" ? t("requestStatus.paid") : w.status === "pending" ? t("requestStatus.pending") : w.status === "rejected" ? t("requestStatus.rejected") : w.status}</span>
                   <span className="ml-2 text-ink-2">{w.bankInfo}</span>
                   <span className="tnum ml-2 text-ink-3">{fmtDateTime(w.createdAt, locale)}</span>
                 </div>

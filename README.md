@@ -33,10 +33,12 @@ Every seeded seeker uses `hoobae1234` and every seeded specialist `sunbae1234`.
 2. 내 예약 → the live session with 박서준 → **입장하기**. In the incognito window log in as **박서준** → 선배 대시보드 → 입장하기. Messages arrive instantly over server-sent events with a typing indicator. Chat in Korean from one side and English from the other; each message shows auto-translated with a *원문 보기* toggle. Attach a PDF or image with the paperclip, or at booking time (the 자소서 shows in the room before the session starts). Try *통화* (a placeholder call with a timer). *세션 종료* ends it early.
 3. 김지우 leaves a review (0–100). Settlement happens on review: 박서준 gets 95%, the platform 5%. His review count ticks to 13 and the price note updates.
 4. **리더보드**: only specialists with 3+ visible reviews are ranked, by a Bayesian score.
-5. **관리자** → 리뷰 검토: seven flagged reviews from three rules (reciprocal reviews, a high-score burst, a new account). Confirm one to hide it and strike both users; dismiss another to restore it. → 환불 요청: approve 이서윤's dispute and watch three ledgers split 45 / 50 / 5. → 인증 요청: approve 윤서연 so she can post.
+5. **관리자** → 리뷰 검토: seven flagged reviews create nine flags across four rules (reciprocal reviews, booking rings, a high-score burst, a new account). Confirm one to hide it and strike both users; dismiss all remaining flags on another review to restore it. → 환불 요청: approve 이서윤's 105-credit dispute and watch three ledgers split 48 / 52 / 5. → 인증 요청: approve 윤서연 so she can post.
 6. **글**: reading a verified specialist's post pays the author 1 credit, once per reader per day.
 
 Dev-only buttons in the session room (*데모: 지금 시작 / 지금 종료*) shift a booking's window so you never wait for a slot while recording.
+
+For recording, use `npm run dev`: the time controls are hidden under `npm run start`. The seeded live session expires as time passes; book a new session and use *데모: 지금 시작* if it has already ended. Calls are a timer-only demo; translation supports prepared phrases such as `감사합니다!` and `Feel free to ask anything.` Use separate browser profiles or normal/incognito windows for the two accounts (two normal tabs share login). The UI is shown in Seoul time. Do not reseed while the app is running or midway through a recording; reseeding deletes accounts/bookings and changes their IDs.
 
 ## What is real and what is mocked
 
@@ -73,6 +75,8 @@ src/db           Drizzle schema, client, seed
 src/lib/i18n     ko/en dictionary, locale cookie
 ```
 
-Checks: `npm run e2e:onboarding` walks a new 선배 through sign-up, onboarding with a CV, the pending state, admin approval and public listing, plus a seeker sign-up. `npm run e2e` drives two real browsers through login, booking with an attachment, live chat with translation, and file sharing (dev server required). `node scripts/mobile-check.mjs <specialistId>` reports any route wider than a 390px viewport.
+Checks: `npm run test:business` runs in-memory regression tests for booking rules, demo time controls, and settlement rollback/retries. `npm run e2e:onboarding` walks a new 선배 through sign-up, onboarding with a CV, the pending state, admin approval and public listing, plus a seeker sign-up. `npm run e2e` drives two real browsers through login, booking with an attachment, live chat with translation, file download, call/session end, review, settlement, certificate navigation, and 30-minute demo controls. `npm run e2e:admin` checks admin login, flag decisions, refund accounting, and verification. `node scripts/mobile-check.mjs <specialistId>` checks 390px overflow, header labels, menu closing, and the reduced-motion landing page.
+
+Browser checks require a dev server and **change its demo data**. Run them in a disposable copy with its own seeded `dev.db`, not against the database used for recording. Set `BASE_URL` to that copy's server (for example `http://localhost:3107`); each script reads `dev.db` from its current directory. Seed before starting that server, and keep the recording server/database separate.
 
 Design context lives in `PRODUCT.md` and `DESIGN.md` (Impeccable).

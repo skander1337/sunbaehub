@@ -26,11 +26,11 @@ export async function Nav({ tone = "paper" }: { tone?: "paper" | "brand" }) {
 
   return (
     <header className={`relative ${onBrand ? "text-white" : "border-b border-line bg-paper"}`}>
-      <div className="container-x flex h-16 items-center justify-between gap-6">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-baseline gap-1.5" aria-label={BRAND.full}>
+      <div className="container-x flex h-16 items-center justify-between gap-2 sm:gap-6">
+        <div className="flex min-w-0 items-center gap-8">
+          <Link href="/" className="flex shrink-0 items-baseline gap-1.5 whitespace-nowrap" aria-label={BRAND.full}>
             <span className={`text-[20px] font-extrabold tracking-[-0.03em] ${onBrand ? "text-white" : "text-ink"}`}>{BRAND.nameKo}</span>
-            <span className={`text-[13px] font-semibold tracking-[-0.01em] ${onBrand ? "text-white/70" : "text-ink-3"}`}>{BRAND.name}</span>
+            <span className={`hidden text-[13px] font-semibold tracking-[-0.01em] sm:inline ${onBrand ? "text-white/70" : "text-ink-3"}`}>{BRAND.name}</span>
           </Link>
           <nav className="hidden items-center gap-6 md:flex" aria-label="Primary">
             <Link href="/specialists" className={link}>{t("nav.specialists")}</Link>
@@ -38,7 +38,7 @@ export async function Nav({ tone = "paper" }: { tone?: "paper" | "brand" }) {
             <Link href="/posts" className={link}>{t("nav.posts")}</Link>
           </nav>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5">
           <LocaleToggle tone={tone} />
           {user ? (
             <>

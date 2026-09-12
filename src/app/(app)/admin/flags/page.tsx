@@ -5,6 +5,18 @@ import { getT } from "@/lib/i18n/server";
 import { fmtDateTime } from "@/lib/seoul";
 import { FRAUD_RULE_LABELS, type FraudRule } from "@/lib/rules/fraud";
 import { resolveFlag } from "@/app/actions/admin";
+import type { DictKey } from "@/lib/i18n/dictionary";
+
+const detailKeys: Record<string, DictKey> = {
+  otherReviewId: "admin.evidence.otherReviewId",
+  otherBookingId: "admin.evidence.otherBookingId",
+  days: "admin.evidence.days",
+  count: "admin.evidence.count",
+  accountAgeDays: "admin.evidence.accountAgeDays",
+  bookings: "admin.evidence.bookings",
+  secondsAfter: "admin.evidence.secondsAfter",
+  messages: "admin.evidence.messages",
+};
 
 export default async function FlagsPage() {
   const { t, locale } = await getT();
@@ -22,7 +34,7 @@ export default async function FlagsPage() {
   const done = rows.filter((x) => x.f.status !== "open");
   const detailText = (d: Record<string, unknown>) =>
     Object.entries(d)
-      .map(([k, v]) => `${k}: ${String(v)}`)
+      .map(([k, v]) => `${detailKeys[k] ? t(detailKeys[k]) : k}: ${String(v)}`)
       .join(" · ");
 
   return (
@@ -75,7 +87,7 @@ export default async function FlagsPage() {
           <ul className="mt-3 divide-y divide-line border-y border-line text-[13.5px]">
             {done.map(({ f, r, reviewer: rv, specialist: sp }) => (
               <li key={f.id} className="flex flex-wrap items-center gap-2 py-2.5">
-                <span className={`tag ${f.status === "confirmed" ? "tag-danger" : "tag-neutral"}`}>{f.status}</span>
+                <span className={`tag ${f.status === "confirmed" ? "tag-danger" : "tag-neutral"}`}>{f.status === "confirmed" ? t("admin.flagStatus.confirmed") : f.status === "dismissed" ? t("admin.flagStatus.dismissed") : f.status}</span>
                 <span className="tag tag-neutral">{FRAUD_RULE_LABELS[f.rule as FraudRule]?.[locale] ?? f.rule}</span>
                 <span>
                   {rv} → {sp} · <span className="tnum font-semibold">{r.score}</span>

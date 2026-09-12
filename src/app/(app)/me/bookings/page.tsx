@@ -135,7 +135,7 @@ export default async function MyBookingsPage({ searchParams }: { searchParams: P
                         </Link>
                       )}
                       {b.status !== "cancelled" && (
-                        <Link href={`/sessions/${b.id}`} className="btn btn-sm btn-outline">
+                        <Link href={`/sessions/${b.id}/certificate`} className="btn btn-sm btn-outline">
                           {t("bookings.certificate")}
                         </Link>
                       )}

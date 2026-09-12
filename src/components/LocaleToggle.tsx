@@ -15,7 +15,7 @@ export function LocaleToggle({ tone = "paper" }: { tone?: "paper" | "brand" }) {
       onClick={() => start(() => setLocale(next))}
       disabled={pending}
       aria-label={locale === "ko" ? "Switch to English" : "한국어로 전환"}
-      className={`inline-flex h-9 items-center gap-1 rounded-[10px] px-2.5 text-[13px] font-semibold transition-colors duration-200 ${
+      className={`inline-flex h-9 shrink-0 items-center gap-1 rounded-[10px] px-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors duration-200 ${
         onBrand ? "text-white/85 hover:bg-white/10" : "text-ink-2 hover:bg-mist"
       } disabled:opacity-60`}
     >

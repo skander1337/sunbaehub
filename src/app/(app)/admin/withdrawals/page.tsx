@@ -49,7 +49,7 @@ export default async function WithdrawalsPage() {
           <ul className="mt-3 divide-y divide-line border-y border-line text-[13.5px]">
             {done.map(({ w, name }) => (
               <li key={w.id} className="flex flex-wrap items-center gap-2 py-2.5">
-                <span className={`tag ${w.status === "paid" ? "tag-success" : "tag-neutral"}`}>{w.status}</span>
+                <span className={`tag ${w.status === "paid" ? "tag-success" : "tag-neutral"}`}>{w.status === "paid" ? t("requestStatus.paid") : w.status === "rejected" ? t("requestStatus.rejected") : w.status}</span>
                 <span>
                   {name} · <span className="tnum">{t("common.creditsN", { n: w.amount.toLocaleString() })}</span>
                 </span>

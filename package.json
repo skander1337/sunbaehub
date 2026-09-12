@@ -12,8 +12,11 @@
     "db:studio": "drizzle-kit studio",
     "setup": "npm run db:push && npm run db:seed",
     "e2e": "node scripts/e2e-demo.mjs",
+    "e2e:admin": "node scripts/e2e-admin.mjs",
+    "test:business": "tsx scripts/business-check.ts",
     "make:cvs": "node scripts/make-cvs.mjs",
-    "e2e:onboarding": "node scripts/onboarding-check.mjs"
+    "e2e:onboarding": "node scripts/onboarding-check.mjs",
+    "host": "scripts/host.sh"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

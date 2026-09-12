@@ -7,11 +7,15 @@ import { IconClose, IconMenu } from "./icons";
 import { logout } from "@/app/actions/auth";
 
 type Item = { href: string; label: string };
+type MobileMenuProps = { tone: "paper" | "brand"; primary: Item[]; account: Item[]; loggedIn: boolean; labels: { menu: string; login: string; signup: string; logout: string } };
 
-export function MobileMenu({ tone, primary, account, loggedIn, labels }: { tone: "paper" | "brand"; primary: Item[]; account: Item[]; loggedIn: boolean; labels: { menu: string; login: string; signup: string; logout: string } }) {
-  const [open, setOpen] = useState(false);
+export function MobileMenu(props: MobileMenuProps) {
   const pathname = usePathname();
-  useEffect(() => setOpen(false), [pathname]);
+  return <MobileMenuContent key={pathname} {...props} />;
+}
+
+function MobileMenuContent({ tone, primary, account, loggedIn, labels }: MobileMenuProps) {
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -20,7 +24,7 @@ export function MobileMenu({ tone, primary, account, loggedIn, labels }: { tone:
   }, [open]);
   const onBrand = tone === "brand";
   return (
-    <div className="md:hidden">
+    <div className="shrink-0 md:hidden">
       <button
         type="button"
         aria-expanded={open}
@@ -35,7 +39,7 @@ export function MobileMenu({ tone, primary, account, loggedIn, labels }: { tone:
         <div id="mobile-menu" className="absolute inset-x-0 top-16 z-30 border-b border-line bg-paper text-ink shadow-raise">
           <nav className="container-x flex flex-col py-3" aria-label={labels.menu}>
             {primary.map((i) => (
-              <Link key={i.href} href={i.href} className="rounded-[10px] px-3 py-3 text-[16px] font-semibold hover:bg-mist">
+              <Link key={i.href} href={i.href} onClick={() => setOpen(false)} className="rounded-[10px] px-3 py-3 text-[16px] font-semibold hover:bg-mist">
                 {i.label}
               </Link>
             ))}
@@ -43,7 +47,7 @@ export function MobileMenu({ tone, primary, account, loggedIn, labels }: { tone:
             {loggedIn ? (
               <>
                 {account.map((i) => (
-                  <Link key={i.href} href={i.href} className="rounded-[10px] px-3 py-2.5 text-[15px] font-medium text-ink-2 hover:bg-mist">
+                  <Link key={i.href} href={i.href} onClick={() => setOpen(false)} className="rounded-[10px] px-3 py-2.5 text-[15px] font-medium text-ink-2 hover:bg-mist">
                     {i.label}
                   </Link>
                 ))}
@@ -55,10 +59,10 @@ export function MobileMenu({ tone, primary, account, loggedIn, labels }: { tone:
               </>
             ) : (
               <div className="flex gap-2 px-3 py-2">
-                <Link href="/login" className="btn btn-primary flex-1">
+                <Link href="/login" onClick={() => setOpen(false)} className="btn btn-primary flex-1">
                   {labels.login}
                 </Link>
-                <Link href="/signup" className="btn btn-outline flex-1">
+                <Link href="/signup" onClick={() => setOpen(false)} className="btn btn-outline flex-1">
                   {labels.signup}
                 </Link>
               </div>

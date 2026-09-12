@@ -29,12 +29,12 @@ export function HeroScreen(p: HeroScreenProps) {
   const [risen, setRisen] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setK(1);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const raf1 = requestAnimationFrame(() => {
       setRisen(true);
-      return;
-    }
-    const raf1 = requestAnimationFrame(() => setRisen(true));
+      if (reducedMotion) setK(1);
+    });
+    if (reducedMotion) return () => cancelAnimationFrame(raf1);
     let raf = 0;
     const t0 = performance.now() + 350;
     const dur = 1400;
@@ -62,7 +62,7 @@ export function HeroScreen(p: HeroScreenProps) {
 
   return (
     <div
-      className={`card mx-auto w-full max-w-[760px] p-5 shadow-raise transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none sm:p-7 ${
+      className={`card mx-auto w-full max-w-[760px] p-5 shadow-raise transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none sm:p-7 ${
         risen ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
       }`}
       aria-label={`${p.name} booking card`}

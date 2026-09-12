@@ -26,12 +26,20 @@ export function transitionEndedBookings(tx: Tx | Db, now: Date): number {
 
 /** Releases escrow to the specialist and posts the platform fee. Idempotent per booking. */
 export function settleBooking(tx: Tx | Db, booking: { id: string; price: number; specialistId: string; settledAt: Date | null }, at: Date): boolean {
-  if (booking.settledAt) return false;
-  const { platformFee, specialistPayout } = normalSettlement(booking.price);
-  postTx(tx, { userId: booking.specialistId, type: "booking_release", amount: specialistPayout, bookingId: booking.id, note: "상담 완료 정산", createdAt: at });
-  postTx(tx, { userId: getPlatformUserId(tx), type: "platform_fee", amount: platformFee, bookingId: booking.id, note: "플랫폼 수수료 5%", createdAt: at });
-  tx.update(bookings).set({ settledAt: at }).where(eq(bookings.id, booking.id)).run();
-  return true;
+  // Claim the current database row, not the caller's potentially stale snapshot.
+  // A transaction/savepoint rolls the claim and both payouts back together on failure.
+  return tx.transaction((settlementTx) => {
+    const claimed = settlementTx.update(bookings)
+      .set({ settledAt: at })
+      .where(and(eq(bookings.id, booking.id), eq(bookings.status, "completed"), isNull(bookings.settledAt)))
+      .returning({ price: bookings.price, specialistId: bookings.specialistId })
+      .get();
+    if (!claimed) return false;
+    const { platformFee, specialistPayout } = normalSettlement(claimed.price);
+    postTx(settlementTx, { userId: claimed.specialistId, type: "booking_release", amount: specialistPayout, bookingId: booking.id, note: "상담 완료 정산", createdAt: at });
+    postTx(settlementTx, { userId: getPlatformUserId(settlementTx), type: "platform_fee", amount: platformFee, bookingId: booking.id, note: "플랫폼 수수료 5%", createdAt: at });
+    return true;
+  });
 }
 
 /** Completed, unsettled, undisputed bookings older than 24h settle automatically. Returns how many settled. */

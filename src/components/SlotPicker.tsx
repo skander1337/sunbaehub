@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/provider";
 import { createBooking } from "@/app/actions/booking";
 import { IconArrow } from "./icons";
+import { LocalizedFileInput } from "./LocalizedFileInput";
 
 export type PickerDay = { dateKey: string; dayName: string; dateLabel: string; isToday: boolean; slots: { iso: string; time: string }[] };
 
@@ -156,14 +157,14 @@ export function SlotPicker(props: {
         <label htmlFor="attachment" className="mb-2 block text-[13px] font-semibold text-ink-3">
           {t("profile.attachment")}
         </label>
-        <input
+        <LocalizedFileInput
           id="attachment"
           name="attachment"
-          type="file"
           accept="application/pdf,image/png,image/jpeg"
-          className="block w-full text-[13.5px] text-ink-2 file:mr-3 file:rounded-[10px] file:border-0 file:bg-mist file:px-3.5 file:py-2 file:text-[13px] file:font-semibold file:text-ink hover:file:bg-brand-tint"
+          label={t("profile.attachment")}
+          descriptionId="attachment-hint"
         />
-        <p className="mt-1.5 text-[12px] text-ink-3">{t("profile.attachmentHint")}</p>
+        <p id="attachment-hint" className="mt-1.5 text-[12px] text-ink-3">{t("profile.attachmentHint")}</p>
       </div>
 
       <div className="hairline pt-5">

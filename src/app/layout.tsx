@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   // Lazy lifecycle: completes ended sessions and settles escrow that is 24h past completion.
-  settleDueBookings(db, new Date());
+  db.transaction((tx) => settleDueBookings(tx, new Date()));
   return (
     <html lang={locale} className={pretendard.variable}>
       <body className="font-sans">

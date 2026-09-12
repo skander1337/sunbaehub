@@ -3,6 +3,7 @@ import { CATEGORIES } from "@/lib/categories";
 import { updateProfile } from "@/app/actions/specialist";
 import type { SpecialistProfile } from "@/db/schema";
 import { MAX_BASE_RATE, MIN_BASE_RATE } from "@/lib/rules/pricing";
+import { LocalizedFileInput } from "@/components/LocalizedFileInput";
 
 /** Shared specialist profile form. mode="onboarding" submits for review; mode="edit" just saves. */
 export async function ProfileForm({ profile, userId, mode }: { profile: SpecialistProfile; userId: string; mode: "edit" | "onboarding" }) {
@@ -77,14 +78,15 @@ export async function ProfileForm({ profile, userId, mode }: { profile: Speciali
 
       <section className="card p-6">
         <h2 className="h3">{t("sp.profile.resume")}</h2>
-        <p className="mt-1 text-[13px] text-ink-3">{t("sp.profile.resumeHint")}</p>
+        <p id="resume-hint" className="mt-1 text-[13px] text-ink-3">{t("sp.profile.resumeHint")}</p>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <input
-            type="file"
+          <LocalizedFileInput
+            id="resume"
             name="resume"
             accept="application/pdf"
             required={!profile.resumePath}
-            className="text-[14px] file:mr-3 file:rounded-[10px] file:border-0 file:bg-mist file:px-3.5 file:py-2 file:text-[13.5px] file:font-semibold file:text-ink hover:file:bg-brand-tint"
+            label={t("sp.profile.resume")}
+            descriptionId="resume-hint"
           />
           {profile.resumePath && (
             <a href={`/api/files/resume/${userId}`} target="_blank" rel="noreferrer" className="text-[13.5px] font-semibold text-brand underline">

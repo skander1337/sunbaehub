@@ -21,6 +21,8 @@ const now = new Date();
 const uuid = () => crypto.randomUUID();
 
 // ---------- reset ----------
+// Clear login sessions and uploaded-file records before their referenced users/bookings.
+db.delete(s.sessions).run();
 db.delete(s.notifications).run();
 db.delete(s.withdrawalRequests).run();
 db.delete(s.disputes).run();
@@ -30,6 +32,7 @@ db.delete(s.posts).run();
 db.delete(s.reviewFlags).run();
 db.delete(s.reviews).run();
 db.delete(s.messages).run();
+db.delete(s.attachments).run();
 db.delete(s.bookings).run();
 db.delete(s.availabilityRules).run();
 db.delete(s.specialistProfiles).run();
