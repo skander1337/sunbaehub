@@ -85,7 +85,9 @@ Checks: `npm run test:business` runs in-memory regression tests for booking rule
 
 `npm run e2e:booking` checks both roles' scheduled entry, direct chat API restrictions, automatic button unlocking, preparation files, and required Other-purpose explanations.
 
-`npm run test:refund` checks exact cancellation quotes and stale-confirmation protection in memory. `npm run test:discovery` checks slot availability, Seoul dates, duration prices, affordability, and sorting without opening the demo database. `npm run e2e:qol` checks both features in the browser against its own disposable fixture database; it also requires `BROWSER_DATABASE_IS_DISPOSABLE=1`.
+`npm run test:refund` checks exact cancellation quotes and stale-confirmation protection in memory. `npm run test:discovery` checks slot availability, Seoul dates, duration prices, affordability, and sorting without opening the demo database. `npm run test:landing` checks that initial Korean and English server HTML contains the actual price and reputation figures, localized booking labels, and an empty availability state. `npm run e2e:qol` checks refunds and discovery in the browser against its own disposable fixture database; it also requires `BROWSER_DATABASE_IS_DISPOSABLE=1`.
+
+`npm run test:chat-scroll` checks that incoming activity preserves a reader's position, follows an already-followed conversation, and uses instant movement for initial history and reduced motion.
 
 Browser checks require a dev server and **change its demo data**. Run them in a disposable copy with its own seeded `dev.db`, not against the database used for recording. Set `BASE_URL` to that copy's server (for example `http://localhost:3107`); each script reads `dev.db` from its current directory. `npm run e2e` and `npm run e2e:booking` also require `BROWSER_DATABASE_IS_DISPOSABLE=1` because they adjust booking times in that test database. Seed before starting that server, and keep the recording server/database separate.
 

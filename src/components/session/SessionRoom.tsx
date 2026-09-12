@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/provider";
 import { IconPaperclip, IconPhone, IconSend } from "@/components/icons";
 import type { WireMessage } from "@/lib/services/chat";
 import { sessionWindow } from "@/lib/rules/session";
+import { createChatScrollFollower } from "@/lib/chat-scroll";
 
 export type ChatMessage = WireMessage;
 
@@ -47,7 +48,11 @@ export function SessionRoom(p: Props) {
   const [inCall, setInCall] = useState(false);
   const [callStart, setCallStart] = useState<number | null>(null);
   const [muted, setMuted] = useState(false);
+  const [ownSendCount, setOwnSendCount] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
+  const scrollFollower = useRef(createChatScrollFollower());
+  const initialScroll = useRef(true);
+  const followedOwnSend = useRef(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const lastTypingSent = useRef(0);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -125,9 +130,32 @@ export function SessionRoom(p: Props) {
     return () => clearInterval(iv);
   }, [poll, p.phase, live]);
 
+  const scrollToLatest = useCallback((instant = false, force = false) => {
+    const list = listRef.current;
+    if (!list) return;
+    scrollFollower.current.follow(list, { instant, force, reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches });
+  }, []);
+
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages.length, typingName]);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = () => {
+      if (reducedMotion.matches) scrollToLatest(true);
+    };
+    reducedMotion.addEventListener("change", onChange);
+    return () => reducedMotion.removeEventListener("change", onChange);
+  }, [scrollToLatest]);
+
+  useLayoutEffect(() => {
+    const first = initialScroll.current;
+    const ownSend = followedOwnSend.current !== ownSendCount;
+    initialScroll.current = false;
+    followedOwnSend.current = ownSendCount;
+    scrollToLatest(first, first || ownSend);
+  }, [messages.length, typingName, ownSendCount, scrollToLatest]);
+
+  function onReaderInput() {
+    if (listRef.current) scrollFollower.current.onUserScroll(listRef.current);
+  }
 
   function onType(v: string) {
     setText(v);
@@ -154,6 +182,9 @@ export function SessionRoom(p: Props) {
         return;
       }
       append([data.message]);
+      // SSE can deliver our message before this response. The counter still
+      // requests a follow even when append deduplicates that message.
+      setOwnSendCount((count) => count + 1);
       setText("");
     } catch {
       setErr(t("error.generic"));
@@ -176,6 +207,7 @@ export function SessionRoom(p: Props) {
         return;
       }
       append([data.message]);
+      setOwnSendCount((count) => count + 1);
     } catch {
       setErr(t("error.generic"));
     } finally {
@@ -248,7 +280,17 @@ export function SessionRoom(p: Props) {
         </div>
       )}
 
-      <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto bg-paper px-3 py-4 sm:px-4">
+      <div
+        ref={listRef}
+        onScroll={(event) => scrollFollower.current.onScroll(event.currentTarget)}
+        onWheel={onReaderInput}
+        onTouchStart={onReaderInput}
+        onPointerDown={onReaderInput}
+        onKeyDown={(event) => {
+          if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) onReaderInput();
+        }}
+        className="flex-1 space-y-3 overflow-y-auto bg-paper px-3 py-4 sm:px-4"
+      >
         {messages.length === 0 && <p className="py-10 text-center text-[14px] text-ink-3">{p.phase === "early" ? t("session.early") : t("session.noMessages")}</p>}
         {messages.map((m) => {
           const mine = m.senderId === p.meId;
@@ -261,7 +303,7 @@ export function SessionRoom(p: Props) {
               <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                 <div className={`flex max-w-[78%] flex-col ${mine ? "items-end" : "items-start"}`}>
                   <a href={href} target="_blank" rel="noreferrer" className={`block overflow-hidden rounded-[16px] border ${mine ? "rounded-br-[6px] border-brand/30 bg-brand-tint" : "rounded-bl-[6px] border-line bg-mist"}`}>
-                    {isImage && <img src={href} alt={a.fileName} className="max-h-64 w-full object-cover" />}
+                    {isImage && <img src={href} alt={a.fileName} onLoad={() => scrollToLatest(true)} className="max-h-64 w-full object-cover" />}
                     <div className="flex items-center gap-3 px-3.5 py-2.5">
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-paper text-[10px] font-bold text-ink-2 uppercase">{a.mime === "application/pdf" ? "PDF" : a.mime.split("/")[1]}</span>
                       <span className="min-w-0">

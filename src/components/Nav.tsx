@@ -67,7 +67,7 @@ export async function Nav({ tone = "paper" }: { tone?: "paper" | "brand" }) {
                   </span>
                   <span className="hidden sm:inline">{user.name}</span>
                 </summary>
-                <div className="card absolute right-0 z-20 mt-2 w-52 p-1.5 text-ink shadow-raise">
+                <div className="focus-on-paper card absolute right-0 z-20 mt-2 w-52 p-1.5 text-ink shadow-raise">
                   <MenuLink href="/me/bookings">{t("nav.bookings")}</MenuLink>
                   <MenuLink href="/me/credits">{t("nav.credits")}</MenuLink>
                   {user.isSpecialist && <MenuLink href="/specialist/dashboard">{t("nav.dashboard")}</MenuLink>}

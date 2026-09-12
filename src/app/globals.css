@@ -11,6 +11,7 @@
   --color-mist: #f2f4f6;
   --color-paper: #ffffff;
   --color-success: #1b8a5a;
+  --color-success-ink: #146c43;
   --color-danger: #d6323c;
   --color-warn: #b7791f;
 
@@ -42,12 +43,18 @@ body {
   color: var(--color-brand-deep);
 }
 :focus-visible {
-  outline: 2px solid var(--color-brand);
+  outline: 2px solid var(--focus-ring, var(--color-brand));
   outline-offset: 2px;
   border-radius: 6px;
 }
 a {
   text-underline-offset: 3px;
+}
+.focus-on-brand {
+  --focus-ring: var(--color-paper);
+}
+.focus-on-paper {
+  --focus-ring: var(--color-brand);
 }
 
 @layer components {
@@ -226,10 +233,31 @@ a {
   animation: hero-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-delay: var(--d, 0ms);
 }
+/* Move the card into place without changing or hiding its actual booking figures. */
+@keyframes hero-screen {
+  from {
+    transform: translateY(40px);
+  }
+  to {
+    transform: none;
+  }
+}
+.hero-screen {
+  animation: hero-screen 700ms cubic-bezier(0.16, 1, 0.3, 1) 260ms backwards;
+}
 
 /* Stacking cards: each section pins at the top and recedes under the next. `--deck-p` and `top` come from <Deck>. */
 .deck {
   position: relative;
+}
+.deck-viewport {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 100vh;
+  height: 100svh;
+  visibility: hidden;
+  pointer-events: none;
 }
 .deck-card {
   position: sticky;
@@ -269,7 +297,7 @@ a {
    complete before the card pins; a pinned element's own view timeline would freeze mid-reveal. Default 1 = visible. */
 .deck-card .reveal,
 .deck-card .reveal-list > * {
-  --rv: clamp(0, (var(--deck-enter, 1) - var(--rv-start, 0.15)) / 0.35, 1);
+  --rv: clamp(0, (var(--deck-enter, 1) - var(--rv-start, 0.15)) / var(--rv-distance, 0.35), 1);
   animation: none;
   opacity: var(--rv);
   transform: translateY(calc((1 - var(--rv)) * 18px));
@@ -295,19 +323,41 @@ a {
 .deck-card .reveal-list > :nth-child(n + 8) {
   --rv-start: 0.57;
 }
+/* Stacked phone layouts put later siblings on screen much sooner than desktop rows.
+   Finish their entrance before the section reaches the reading area. */
+@media (max-width: 767px) {
+  .deck-card .reveal,
+  .deck-card .reveal-list > :nth-child(n) {
+    --rv-start: 0;
+    --rv-distance: 0.2;
+  }
+}
 .deck-card.deck-card--brand {
   background: var(--color-brand);
   border-top: 0;
 }
 @media (prefers-reduced-motion: reduce) {
   .deck-card,
-  .deck-card.is-covered {
+  .deck-card.is-covered,
+  .deck-card.is-hidden {
     position: static;
     transform: none;
     min-height: 0;
+    visibility: visible;
+    will-change: auto;
   }
   .deck-card::after {
     display: none;
+  }
+  .deck-card .reveal,
+  .deck-card .reveal-list > * {
+    opacity: 1;
+    transform: none;
+  }
+  .hero-screen,
+  .hero-line,
+  .hero-in {
+    animation: none;
   }
 }
 

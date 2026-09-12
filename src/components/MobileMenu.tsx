@@ -19,8 +19,16 @@ function MobileMenuContent({ tone, primary, account, loggedIn, labels }: MobileM
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const onNavigationChange = () => {
+      if (desktop.matches) setOpen(false);
+    };
+    desktop.addEventListener("change", onNavigationChange);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      desktop.removeEventListener("change", onNavigationChange);
+      window.removeEventListener("keydown", onKey);
+    };
   }, [open]);
   const onBrand = tone === "brand";
   return (
@@ -36,7 +44,7 @@ function MobileMenuContent({ tone, primary, account, loggedIn, labels }: MobileM
         {open ? <IconClose size={20} /> : <IconMenu size={20} />}
       </button>
       {open && (
-        <div id="mobile-menu" className="absolute inset-x-0 top-16 z-30 border-b border-line bg-paper text-ink shadow-raise">
+        <div id="mobile-menu" className="focus-on-paper absolute inset-x-0 top-16 z-30 border-b border-line bg-paper text-ink shadow-raise">
           <nav className="container-x flex flex-col py-3" aria-label={labels.menu}>
             {primary.map((i) => (
               <Link key={i.href} href={i.href} onClick={() => setOpen(false)} className="rounded-[10px] px-3 py-3 text-[16px] font-semibold hover:bg-mist">

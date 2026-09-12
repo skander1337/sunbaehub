@@ -51,10 +51,10 @@ console.log("PASS mobile menu: selecting the current page closes the menu");
 const reduced = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 1280, height: 900 } });
 const landing = await reduced.newPage();
 await landing.goto(base);
-const hero = landing.locator('[aria-label$=" booking card"]');
+const hero = landing.getByTestId("landing-booking-card");
 await hero.waitFor({ state: "visible" });
 await landing.waitForFunction(() => {
-  const el = document.querySelector('[aria-label$=" booking card"]');
+  const el = document.querySelector('[data-testid="landing-booking-card"]');
   return el && getComputedStyle(el).opacity === "1" && getComputedStyle(el).transform === "none";
 });
 await landing.screenshot({ path: ".impeccable/review/reduced-motion-landing.png" });

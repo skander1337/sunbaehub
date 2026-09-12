@@ -99,7 +99,7 @@ export default async function LandingPage() {
     : [];
   const creditRows = [
     { k: t("landing.creditsRow1"), v: t("landing.creditsRow1d"), tone: "text-ink" },
-    { k: t("landing.creditsRow2"), v: t("landing.creditsRow2d"), tone: "text-success" },
+    { k: t("landing.creditsRow2"), v: t("landing.creditsRow2d"), tone: "text-success-ink" },
     { k: t("landing.creditsRow3"), v: t("landing.creditsRow3d"), tone: "text-danger" },
     { k: t("landing.creditsRow4"), v: t("landing.creditsRow4d"), tone: "text-brand" },
   ];
@@ -108,7 +108,7 @@ export default async function LandingPage() {
     <Deck>
       {/* Card 1: the indigo field, with the real product screen rising through its lower edge */}
       <section className="deck-card">
-        <div className="bg-brand text-white">
+        <div className="focus-on-brand bg-brand text-white">
           <Nav tone="brand" />
           <div className={`container-x pt-14 sm:pt-20 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-14 ${featured ? "pb-56 sm:pb-64" : "pb-20 sm:pb-28"}`}>
             <div>
@@ -161,7 +161,6 @@ export default async function LandingPage() {
               initial={featured.name.slice(0, 1)}
               headline={featured.headline}
               verified={featured.verification === "verified"}
-              basePrice={featured.basePrice}
               price={featured.pricing.price}
               multiplier={featured.pricing.multiplier}
               reviewCount={featured.reviewCount}
@@ -179,10 +178,11 @@ export default async function LandingPage() {
       <section className="deck-card">
         <div className="container-x flex flex-1 flex-col justify-center py-20 sm:py-24">
           <h2 className="reveal h2 text-[26px] sm:text-[32px]">{t("landing.howTitle")}</h2>
-          <ol className="reveal-list mt-8 grid gap-10 sm:mt-10 sm:grid-cols-3 sm:gap-8">
+          {featured && <p className="reveal mt-3 text-[14px] text-ink-2">{t("landing.previewLabel")}</p>}
+          <ol className="reveal-list mt-8 grid gap-10 sm:mt-10 sm:gap-8 lg:grid-cols-3">
             {steps.map((s, i) => (
               <li key={s.title} className="flex flex-col border-t border-ink pt-5">
-                <div className="tnum text-[13px] font-bold text-ink-3">{i + 1}</div>
+                <div className="tnum text-[13px] font-bold text-ink-2">{i + 1}</div>
                 <div className="mt-2 text-[19px] font-bold tracking-[-0.015em] sm:text-[20px]">{s.title}</div>
                 <p className="muted mt-2 text-[15px] leading-relaxed">{s.desc}</p>
                 {figures[i] && <div className="mt-6 min-h-[300px] flex-1">{figures[i]}</div>}
@@ -212,7 +212,7 @@ export default async function LandingPage() {
               <div className="reveal flex items-end justify-between gap-4">
                 <div>
                   <h2 className="h2 text-[26px] sm:text-[30px]">{t("landing.stripTitle")}</h2>
-                  <p className="mt-2 text-[13px] text-ink-3">{t("landing.demoNote")}</p>
+                  <p className="mt-2 text-[13px] text-ink-2">{t("landing.demoNote")}</p>
                 </div>
                 <Link href="/specialists" className="btn btn-sm btn-outline shrink-0">
                   {t("landing.stripAll")}
@@ -255,10 +255,10 @@ export default async function LandingPage() {
       </section>
 
       {/* Card 5: the indigo close, holding the two actions, and the footer */}
-      <section className="deck-card deck-card--brand text-white">
+      <section className="deck-card deck-card--brand focus-on-brand text-white">
         <div className="container-x flex flex-1 flex-col">
           <div className="reveal-list grid flex-1 content-center gap-4 py-20 sm:grid-cols-2 sm:py-24">
-            <div className="rounded-[16px] bg-paper p-7 text-ink sm:p-9">
+            <div className="focus-on-paper rounded-[16px] bg-paper p-7 text-ink sm:p-9">
               <h2 className="text-[22px] font-bold tracking-[-0.015em] sm:text-[24px]">{t("landing.closeSeekerT")}</h2>
               <p className="muted mt-2 text-[15px] leading-relaxed">{t("landing.closeSeekerD")}</p>
               <Link href="/specialists" className="btn btn-primary mt-6">

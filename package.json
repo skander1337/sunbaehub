@@ -18,6 +18,8 @@
     "test:business": "tsx scripts/business-check.ts",
     "test:discovery": "tsx scripts/discovery-check.ts",
     "test:refund": "tsx scripts/refund-check.ts",
+    "test:landing": "tsx scripts/landing-check.tsx",
+    "test:chat-scroll": "tsx scripts/chat-scroll-check.ts",
     "make:cvs": "node scripts/make-cvs.mjs",
     "e2e:onboarding": "node scripts/onboarding-check.mjs",
     "host": "scripts/host.sh"
