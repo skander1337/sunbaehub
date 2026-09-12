@@ -26,14 +26,14 @@ export function SlotPicker(props: {
   const canSubmit = !!slot && !!category && props.balance !== null && after !== null && after >= 0 && !props.disabled;
 
   return (
-    <form action={createBooking} className="space-y-6">
+    <form action={createBooking} className="min-w-0 space-y-6">
       <input type="hidden" name="specialistId" value={props.specialistId} />
       <input type="hidden" name="startAt" value={slot ?? ""} />
       <input type="hidden" name="category" value={category} />
 
       <div>
         <div className="mb-2 text-[13px] font-semibold text-ink-3">{t("profile.pickDay")}</div>
-        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" role="tablist">
+        <div className="-mx-1 flex min-w-0 gap-1.5 overflow-x-auto px-1 pb-1" role="tablist">
           {props.days.map((d, i) => {
             const active = i === dayIdx;
             const empty = d.slots.length === 0;

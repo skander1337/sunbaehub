@@ -173,8 +173,8 @@ export default async function SpecialistPage({ params, searchParams }: { params:
         </section>
       </div>
 
-      <aside className="order-first lg:order-2 lg:sticky lg:top-6 lg:self-start">
-        <div className="card p-6">
+      <aside className="order-first min-w-0 lg:order-2 lg:sticky lg:top-6 lg:self-start">
+        <div className="card min-w-0 p-6">
           <FormError code={error} />
           <div className="flex items-end justify-between">
             <div>
