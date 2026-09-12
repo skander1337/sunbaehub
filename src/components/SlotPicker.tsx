@@ -1,0 +1,147 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useI18n } from "@/lib/i18n/provider";
+import { createBooking } from "@/app/actions/booking";
+import { IconArrow } from "./icons";
+
+export type PickerDay = { dateKey: string; dayName: string; dateLabel: string; isToday: boolean; slots: { iso: string; time: string }[] };
+
+export function SlotPicker(props: {
+  specialistId: string;
+  days: PickerDay[];
+  price: number;
+  balance: number | null;
+  categories: { id: string; label: string }[];
+  loginHref: string;
+  disabled?: boolean;
+}) {
+  const { t } = useI18n();
+  const firstWithSlots = props.days.findIndex((d) => d.slots.length > 0);
+  const [dayIdx, setDayIdx] = useState(firstWithSlots >= 0 ? firstWithSlots : 0);
+  const [slot, setSlot] = useState<string | null>(null);
+  const [category, setCategory] = useState(props.categories[0]?.id ?? "");
+  const day = props.days[dayIdx];
+  const after = useMemo(() => (props.balance === null ? null : props.balance - props.price), [props.balance, props.price]);
+  const canSubmit = !!slot && !!category && props.balance !== null && after !== null && after >= 0 && !props.disabled;
+
+  return (
+    <form action={createBooking} className="space-y-6">
+      <input type="hidden" name="specialistId" value={props.specialistId} />
+      <input type="hidden" name="startAt" value={slot ?? ""} />
+      <input type="hidden" name="category" value={category} />
+
+      <div>
+        <div className="mb-2 text-[13px] font-semibold text-ink-3">{t("profile.pickDay")}</div>
+        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" role="tablist">
+          {props.days.map((d, i) => {
+            const active = i === dayIdx;
+            const empty = d.slots.length === 0;
+            return (
+              <button
+                key={d.dateKey}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                disabled={empty}
+                onClick={() => {
+                  setDayIdx(i);
+                  setSlot(null);
+                }}
+                className={`flex w-[58px] shrink-0 flex-col items-center rounded-[12px] px-2 py-2 text-center transition-colors duration-150 ${
+                  active ? "bg-ink text-white" : empty ? "text-ink-3/50" : "bg-mist text-ink hover:bg-brand-tint hover:text-brand-deep"
+                }`}
+              >
+                <span className="text-[12px] font-medium">{d.isToday ? t("profile.today") : d.dayName}</span>
+                <span className="tnum text-[15px] font-bold">{d.dateLabel}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-2 text-[13px] font-semibold text-ink-3">{t("profile.pickTime")}</div>
+        {day && day.slots.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {day.slots.map((s) => {
+              const active = slot === s.iso;
+              return (
+                <button
+                  key={s.iso}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setSlot(s.iso)}
+                  className={`tnum h-10 rounded-[12px] px-4 text-[14.5px] font-semibold transition-colors duration-150 ${
+                    active ? "bg-brand text-white" : "border border-line bg-paper text-ink hover:border-brand hover:text-brand-deep"
+                  }`}
+                >
+                  {s.time}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="muted text-[14px]">{t("profile.noSlots")}</p>
+        )}
+      </div>
+
+      <div>
+        <div className="mb-2 text-[13px] font-semibold text-ink-3">{t("profile.category")}</div>
+        <div className="flex flex-wrap gap-2">
+          {props.categories.map((c) => {
+            const active = category === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setCategory(c.id)}
+                className={`h-10 rounded-[12px] px-4 text-[14px] font-semibold transition-colors duration-150 ${
+                  active ? "bg-brand-tint text-brand-deep ring-1 ring-brand/40 ring-inset" : "bg-mist text-ink hover:bg-brand-tint hover:text-brand-deep"
+                }`}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="note" className="mb-2 block text-[13px] font-semibold text-ink-3">
+          {t("profile.note")}
+        </label>
+        <textarea id="note" name="note" className="textarea" placeholder={t("profile.notePh")} maxLength={500} />
+      </div>
+
+      <div className="hairline pt-5">
+        <div className="flex items-center justify-between text-[14px]">
+          <span className="muted">{t("profile.priceTitle")}</span>
+          <span className="tnum font-bold">{t("common.creditsN", { n: props.price })}</span>
+        </div>
+        {props.balance !== null && after !== null && (
+          <div className="mt-1.5 flex items-center justify-between text-[14px]">
+            <span className="muted">
+              {t("profile.balance")} → {t("profile.after")}
+            </span>
+            <span className={`tnum font-semibold ${after < 0 ? "text-danger" : "text-ink-2"}`}>
+              {props.balance.toLocaleString()} → {after.toLocaleString()}
+            </span>
+          </div>
+        )}
+        {props.balance === null ? (
+          <a href={props.loginHref} className="btn btn-primary mt-4 w-full">
+            {t("profile.loginToBook")}
+          </a>
+        ) : (
+          <button type="submit" disabled={!canSubmit} className="btn btn-primary mt-4 w-full">
+            {slot ? t("profile.book") : t("profile.selectSlot")}
+            <IconArrow size={18} />
+          </button>
+        )}
+        <p className="mt-3 text-[12.5px] leading-relaxed text-ink-3">{t("profile.hold", { n: props.price })}</p>
+      </div>
+    </form>
+  );
+}

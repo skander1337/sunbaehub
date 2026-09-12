@@ -1,6 +1,7 @@
 import { and, eq, ne, sql } from "drizzle-orm";
 import type { Db, Tx } from "@/db";
-import { bookings, creditTransactions, messages, reviewFlags, reviews, specialistProfiles, users } from "@/db/schema";
+import { bookings, creditTransactions, messages, notifications, reviewFlags, reviews, specialistProfiles, users } from "@/db/schema";
+import { settleBooking } from "./settlement";
 import { evaluateReview, type FraudContext, type FraudHit } from "@/lib/rules/fraud";
 import { rankScore } from "@/lib/rules/ranking";
 
@@ -137,4 +138,53 @@ export function runFraudScan(tx: Tx | Db): { evaluated: number; flagged: number 
   const specialists = tx.select({ id: specialistProfiles.userId }).from(specialistProfiles).all();
   for (const s of specialists) recomputeStats(tx, s.id);
   return { evaluated: rows.length, flagged };
+}
+
+export class ReviewRuleError extends Error {
+  constructor(public code: "not_seeker" | "not_completed" | "already_reviewed" | "bad_score") {
+    super(code);
+  }
+}
+
+/** Seeker submits the one review for a booking; settlement finalises here if still pending. */
+export function submitReview(tx: Tx | Db, input: { bookingId: string; reviewerId: string; score: number; body: string }, now: Date): { reviewId: string; hits: FraudHit[] } {
+  const b = tx.select().from(bookings).where(eq(bookings.id, input.bookingId)).get();
+  if (!b || b.seekerId !== input.reviewerId) throw new ReviewRuleError("not_seeker");
+  if (!(b.status === "completed" || b.status === "refunded")) throw new ReviewRuleError("not_completed");
+  if (tx.select({ id: reviews.id }).from(reviews).where(eq(reviews.bookingId, b.id)).get()) throw new ReviewRuleError("already_reviewed");
+  if (!Number.isInteger(input.score) || input.score < 0 || input.score > 100) throw new ReviewRuleError("bad_score");
+  const reviewId = crypto.randomUUID();
+  tx.insert(reviews).values({ id: reviewId, bookingId: b.id, reviewerId: input.reviewerId, specialistId: b.specialistId, score: input.score, body: input.body.trim(), status: "visible", createdAt: now }).run();
+  if (b.status === "completed" && !b.settledAt) settleBooking(tx, { id: b.id, price: b.price, specialistId: b.specialistId, settledAt: b.settledAt }, now);
+  const hits = evaluateAndFlag(tx, reviewId);
+  recomputeStats(tx, b.specialistId);
+  tx.insert(notifications).values({ userId: b.specialistId, kind: "review_received", params: { score: input.score }, href: "/specialist/dashboard", createdAt: now }).run();
+  return { reviewId, hits };
+}
+
+/** Admin resolves one flag. Confirming hides the review and strikes both users; dismissing may restore visibility. */
+export function resolveFlag(tx: Tx | Db, flagId: string, decision: "dismissed" | "confirmed", now: Date): void {
+  const f = tx.select().from(reviewFlags).where(eq(reviewFlags.id, flagId)).get();
+  if (!f || f.status !== "open") return;
+  tx.update(reviewFlags).set({ status: decision, resolvedAt: now }).where(eq(reviewFlags.id, f.id)).run();
+  const r = tx.select().from(reviews).where(eq(reviews.id, f.reviewId)).get();
+  if (!r) return;
+  if (decision === "confirmed") {
+    tx.update(reviews).set({ status: "hidden" }).where(eq(reviews.id, r.id)).run();
+    tx.update(users).set({ strikes: sql`${users.strikes} + 1` }).where(eq(users.id, r.reviewerId)).run();
+    tx.update(users).set({ strikes: sql`${users.strikes} + 1` }).where(eq(users.id, r.specialistId)).run();
+    for (const uid of [r.reviewerId, r.specialistId]) {
+      tx.insert(notifications).values({ userId: uid, kind: "flag_update", params: { status: "confirmed" }, href: "/me/bookings", createdAt: now }).run();
+    }
+  } else {
+    const remaining = tx
+      .select({ id: reviewFlags.id })
+      .from(reviewFlags)
+      .where(and(eq(reviewFlags.reviewId, r.id), ne(reviewFlags.status, "dismissed")))
+      .all();
+    if (remaining.length === 0 && r.status === "flagged") {
+      tx.update(reviews).set({ status: "visible" }).where(eq(reviews.id, r.id)).run();
+    }
+  }
+  recomputeStats(tx, r.specialistId);
 }
