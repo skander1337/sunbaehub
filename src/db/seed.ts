@@ -10,7 +10,7 @@ import { normalSettlement } from "@/lib/rules/refund";
 import { fromSeoul, seoulDayKey, seoulParts } from "@/lib/seoul";
 import { DEMO_PHRASES, detectLang, translate } from "@/lib/translate";
 import { hashPassword } from "@/lib/password";
-import { DEMO_PASSWORDS } from "@/lib/demo";
+import { DEMO_ADMIN_EMAIL, DEMO_PASSWORDS } from "@/lib/demo";
 import { BRAND } from "@/lib/brand";
 import { priceForDuration } from "@/lib/rules/pricing";
 
@@ -46,7 +46,7 @@ const platformId = uuid();
 db.insert(s.users).values({ id: platformId, name: "SunbaeHub Platform", email: "platform@sunbaehub.demo", isSeeker: false, isPlatform: true, createdAt: new Date(now.getTime() - 120 * DAY) }).run();
 
 const adminId = uuid();
-db.insert(s.users).values({ id: adminId, name: "관리자", email: "admin@sunbaehub.demo", passwordHash: hashPassword(DEMO_PASSWORDS.admin), isSeeker: false, isAdmin: true, createdAt: new Date(now.getTime() - 120 * DAY) }).run();
+db.insert(s.users).values({ id: adminId, name: "관리자", email: DEMO_ADMIN_EMAIL, passwordHash: hashPassword(DEMO_PASSWORDS.admin), isSeeker: false, isAdmin: true, createdAt: new Date(now.getTime() - 120 * DAY) }).run();
 
 type SeekerSpec = { key: string; name: string; email: string; createdAgoDays: number; topup?: number; affiliation?: string };
 const seekerSpecs: SeekerSpec[] = [
