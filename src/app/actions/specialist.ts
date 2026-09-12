@@ -12,6 +12,7 @@ import { postTx } from "@/lib/services/ledger";
 import { submitForReview } from "@/lib/services/admin";
 import { clampBaseRate } from "@/lib/rules/pricing";
 import type { Education, Experience } from "@/db/schema";
+import { validateResume } from "@/lib/resume-upload";
 
 const str = (fd: FormData, k: string, max = 200) => String(fd.get(k) ?? "").trim().slice(0, max);
 
@@ -41,7 +42,8 @@ export async function updateProfile(formData: FormData) {
   const file = formData.get("resume");
   if (!current.resumePath && !(file instanceof File && file.size > 0)) redirect(`${back}?error=resume_required`);
   if (file instanceof File && file.size > 0) {
-    if (file.type !== "application/pdf" || file.size > 8 * 1024 * 1024) redirect(`${back}?error=file`);
+    const error = await validateResume(file);
+    if (error) redirect(`${back}?error=${error}`);
     const dir = path.join(process.cwd(), "uploads");
     await mkdir(dir, { recursive: true });
     await writeFile(path.join(dir, `${user.id}.pdf`), Buffer.from(await file.arrayBuffer()));

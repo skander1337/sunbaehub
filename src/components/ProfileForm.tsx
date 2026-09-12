@@ -4,6 +4,7 @@ import { updateProfile } from "@/app/actions/specialist";
 import type { SpecialistProfile } from "@/db/schema";
 import { MAX_BASE_RATE, MIN_BASE_RATE } from "@/lib/rules/pricing";
 import { LocalizedFileInput } from "@/components/LocalizedFileInput";
+import { MAX_RESUME_BYTES } from "@/lib/resume-upload";
 
 /** Shared specialist profile form. mode="onboarding" submits for review; mode="edit" just saves. */
 export async function ProfileForm({ profile, userId, mode }: { profile: SpecialistProfile; userId: string; mode: "edit" | "onboarding" }) {
@@ -83,7 +84,9 @@ export async function ProfileForm({ profile, userId, mode }: { profile: Speciali
           <LocalizedFileInput
             id="resume"
             name="resume"
-            accept="application/pdf"
+            accept=".pdf,application/pdf"
+            maxBytes={MAX_RESUME_BYTES}
+            sizeError={t("error.resume_size")}
             required={!profile.resumePath}
             label={t("sp.profile.resume")}
             descriptionId="resume-hint"

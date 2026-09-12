@@ -3,13 +3,15 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/provider";
 
-export function LocalizedFileInput({ id, name, accept, required, label, descriptionId }: {
+export function LocalizedFileInput({ id, name, accept, required, label, descriptionId, maxBytes, sizeError }: {
   id?: string;
   name: string;
   accept: string;
   required?: boolean;
   label: string;
   descriptionId?: string;
+  maxBytes?: number;
+  sizeError?: string;
 }) {
   const { t } = useI18n();
   const generatedId = useId();
@@ -20,7 +22,10 @@ export function LocalizedFileInput({ id, name, accept, required, label, descript
 
   useEffect(() => {
     const form = inputRef.current?.form;
-    const reset = () => setFileName("");
+    const reset = () => {
+      setFileName("");
+      inputRef.current?.setCustomValidity("");
+    };
     form?.addEventListener("reset", reset);
     return () => form?.removeEventListener("reset", reset);
   }, []);
@@ -39,7 +44,13 @@ export function LocalizedFileInput({ id, name, accept, required, label, descript
           aria-label={label}
           aria-describedby={[descriptionId, statusId].filter(Boolean).join(" ")}
           title={fileName || t("file.noneSelected")}
-          onChange={(event) => setFileName(event.currentTarget.files?.[0]?.name ?? "")}
+          onChange={(event) => {
+            const input = event.currentTarget;
+            const file = input.files?.[0];
+            setFileName(file?.name ?? "");
+            input.setCustomValidity(file && maxBytes && file.size > maxBytes ? (sizeError ?? t("error.file_size")) : "");
+            if (!input.validity.valid && file) input.reportValidity();
+          }}
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
         />
         <span aria-hidden="true">{t("file.choose")}</span>
