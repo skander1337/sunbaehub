@@ -13,7 +13,7 @@ npm run setup     # creates dev.db and seeds the demo data
 npm run dev       # http://localhost:3000
 ```
 
-Requires Node 20.9+ (built with Node 24). `npm run setup` is safe to re-run: it rebuilds the database from scratch.
+Requires Node 22+ (built and deployed with Node 24). `npm run setup` rebuilds the database from scratch; use it only for a fresh installation or disposable demo data.
 
 ## Demo script (the golden path)
 
