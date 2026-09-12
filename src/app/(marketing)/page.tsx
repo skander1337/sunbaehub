@@ -16,17 +16,21 @@ export default async function LandingPage() {
   const { t, locale } = await getT();
   const now = new Date();
   const all = listSpecialists({ verifiedOnly: true });
-  const featured = [...all].sort((a, b) => b.reviewCount - a.reviewCount)[0];
+  const featured = [...all].sort((a, b) => b.reviewCount - a.reviewCount)[0] ?? null;
   const strip = all.filter((s) => s.ranked).slice(0, 4);
 
-  const { rules, busy } = getAvailabilityInputs(featured.id, now);
-  const slots = computeSlots(rules, busy, now, { days: 14 })
-    .flatMap((d) => d.slots)
-    .slice(0, 3)
-    .map((s) => {
-      const p = seoulParts(s.startAt);
-      return { label: `${dayName(p.dow, locale)} ${fmtTime(s.startAt)}`, sub: `${p.m + 1}/${p.d}` };
-    });
+  const slots = featured
+    ? (() => {
+        const { rules, busy } = getAvailabilityInputs(featured.id, now);
+        return computeSlots(rules, busy, now, { days: 14 })
+          .flatMap((d) => d.slots)
+          .slice(0, 3)
+          .map((s) => {
+            const p = seoulParts(s.startAt);
+            return { label: `${dayName(p.dow, locale)} ${fmtTime(s.startAt)}`, sub: `${p.m + 1}/${p.d}` };
+          });
+      })()
+    : [];
 
   const rules3 = [
     { icon: IconStar, title: t("landing.rule1"), desc: t("landing.rule1d") },
@@ -50,7 +54,7 @@ export default async function LandingPage() {
       {/* Indigo field: nav + hero copy */}
       <section className="bg-brand text-white">
         <Nav tone="brand" />
-        <div className="container-x pt-14 pb-56 sm:pt-20 sm:pb-64">
+        <div className={`container-x pt-14 sm:pt-20 ${featured ? "pb-56 sm:pb-64" : "pb-20 sm:pb-28"}`}>
           <h1 className="max-w-[16ch] text-[40px] leading-[1.08] font-extrabold tracking-[-0.03em] text-balance sm:text-[56px] lg:text-[64px]">
             {t("landing.headline1")}
             <br />
@@ -83,22 +87,24 @@ export default async function LandingPage() {
       </section>
 
       {/* The real product screen rising through the field's edge */}
-      <div className="container-x -mt-44 sm:-mt-52">
-        <HeroScreen
-          href={`/specialists/${featured.id}`}
-          name={featured.name}
-          initial={featured.name.slice(0, 1)}
-          headline={featured.headline}
-          verified={featured.verification === "verified"}
-          basePrice={featured.basePrice}
-          price={featured.pricing.price}
-          multiplier={featured.pricing.multiplier}
-          reviewCount={featured.reviewCount}
-          avgScore={featured.avgScore}
-          won={BRAND.creditsToWon}
-          slots={slots}
-        />
-      </div>
+      {featured && (
+        <div className="container-x -mt-44 sm:-mt-52">
+          <HeroScreen
+            href={`/specialists/${featured.id}`}
+            name={featured.name}
+            initial={featured.name.slice(0, 1)}
+            headline={featured.headline}
+            verified={featured.verification === "verified"}
+            basePrice={featured.basePrice}
+            price={featured.pricing.price}
+            multiplier={featured.pricing.multiplier}
+            reviewCount={featured.reviewCount}
+            avgScore={featured.avgScore}
+            won={BRAND.creditsToWon}
+            slots={slots}
+          />
+        </div>
+      )}
 
       {/* How it works */}
       <section className="container-x pt-24 sm:pt-32">
@@ -135,6 +141,7 @@ export default async function LandingPage() {
       </section>
 
       {/* Specialists strip */}
+      {strip.length > 0 && (
       <section className="container-x pt-20 sm:pt-24">
         <Reveal>
           <div className="flex items-end justify-between gap-4">
@@ -155,6 +162,7 @@ export default async function LandingPage() {
           ))}
         </div>
       </section>
+      )}
 
       {/* Credits explainer */}
       <section className="container-x pt-20 sm:pt-24">
