@@ -10,7 +10,8 @@
     "db:push": "drizzle-kit push --force",
     "db:seed": "tsx src/db/seed.ts",
     "db:studio": "drizzle-kit studio",
-    "setup": "npm run db:push && npm run db:seed"
+    "setup": "npm run db:push && npm run db:seed",
+    "e2e": "node scripts/e2e-demo.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
@@ -29,6 +30,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
+    "playwright": "^1.58.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.13",
     "typescript": "^5"
