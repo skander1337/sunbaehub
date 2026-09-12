@@ -17,7 +17,11 @@ export const CATEGORIES: { id: CategoryId; ko: string; en: string }[] = [
   { id: "coding_test", ko: "코딩테스트 준비", en: "Coding test prep" },
 ];
 
+// Booking purposes may be custom; specialist expertise and discovery stay specific.
+export const OTHER_CONSULTATION_PURPOSE = { id: "other", ko: "기타", en: "Other" } as const;
+
 export function categoryLabel(id: string, locale: "ko" | "en"): string {
+  if (id === OTHER_CONSULTATION_PURPOSE.id) return OTHER_CONSULTATION_PURPOSE[locale];
   const c = CATEGORIES.find((x) => x.id === id);
   return c ? c[locale] : id;
 }

@@ -1,8 +1,12 @@
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, lt } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { priceFor, priceForDuration, priceNote, type PriceBreakdown } from "@/lib/rules/pricing";
 import { isRanked } from "@/lib/rules/ranking";
 import type { Locale } from "@/lib/i18n/dictionary";
+import { discoverSpecialists, type DiscoveryAvailability, type SpecialistDiscoveryOptions } from "@/lib/rules/discovery";
+import { fromSeoul, seoulParts } from "@/lib/seoul";
+
+export type { SpecialistDiscoveryOptions } from "@/lib/rules/discovery";
 
 export type SpecialistCardData = {
   id: string;
@@ -19,6 +23,8 @@ export type SpecialistCardData = {
   price30: number;
   note: Record<Locale, string>;
 };
+
+export type AvailableSpecialistCardData = SpecialistCardData & DiscoveryAvailability;
 
 const toCard = (u: { id: string; name: string }, p: typeof schema.specialistProfiles.$inferSelect): SpecialistCardData => {
   const pricing = priceFor(p.basePrice, p.reviewCount, p.avgScore);
@@ -50,6 +56,27 @@ export function listSpecialists(opts: { category?: string } = {}): SpecialistCar
   return rows
     .map((r) => toCard(r.u, r.p))
     .filter((c) => !opts.category || c.categories.includes(opts.category));
+}
+
+/** Directory-only availability discovery; landing and leaderboard keep their existing ranking. */
+export function listAvailableSpecialists(options: SpecialistDiscoveryOptions): AvailableSpecialistCardData[] {
+  const candidates = listSpecialists({ category: options.category }).filter((card) => card.id !== options.userId);
+  if (!candidates.length) return [];
+  const ids = candidates.map((card) => card.id);
+  const p = seoulParts(options.now);
+  const horizonEnd = fromSeoul(p.y, p.m, p.d + 14);
+  const rules = db.select().from(schema.availabilityRules).where(inArray(schema.availabilityRules.specialistId, ids)).all();
+  const busy = db
+    .select({ specialistId: schema.bookings.specialistId, startAt: schema.bookings.startAt, endAt: schema.bookings.endAt })
+    .from(schema.bookings)
+    .where(and(
+      inArray(schema.bookings.specialistId, ids),
+      inArray(schema.bookings.status, ["confirmed", "in_progress"]),
+      gte(schema.bookings.endAt, options.now),
+      lt(schema.bookings.startAt, horizonEnd),
+    ))
+    .all();
+  return discoverSpecialists(candidates, rules, busy, options);
 }
 
 export function getSpecialistCard(id: string): SpecialistCardData | null {

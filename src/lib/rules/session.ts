@@ -1,10 +1,11 @@
+/** Grace applies only after the scheduled end; entry opens at the exact start. */
 export const GRACE_MIN = 5;
 
 export type SessionWindow = "early" | "open" | "closed";
 
 export function sessionWindow(b: { startAt: Date; endAt: Date }, now: Date, graceMin = GRACE_MIN): SessionWindow {
   const g = graceMin * 60_000;
-  if (now.getTime() < b.startAt.getTime() - g) return "early";
+  if (now.getTime() < b.startAt.getTime()) return "early";
   if (now.getTime() > b.endAt.getTime() + g) return "closed";
   return "open";
 }
@@ -21,6 +22,13 @@ export function canChat(b: SessionBooking, userId: string, now: Date): boolean {
     (b.status === "confirmed" || b.status === "in_progress") &&
     sessionWindow(b, now) === "open"
   );
+}
+
+/** Past sessions remain readable, but their transcript cannot be opened early. */
+export function sessionReadBlockReason(b: SessionBooking, userId: string, now: Date): "not_participant" | "early" | null {
+  if (!isParticipant(b, userId)) return "not_participant";
+  if (now.getTime() < b.startAt.getTime()) return "early";
+  return null;
 }
 
 export function chatBlockReason(b: SessionBooking, userId: string, now: Date): "not_participant" | "status" | "early" | "closed" | null {

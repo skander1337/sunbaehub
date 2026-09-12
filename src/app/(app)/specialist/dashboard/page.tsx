@@ -6,17 +6,21 @@ import { getT } from "@/lib/i18n/server";
 import { getSpecialistCard, listSpecialists } from "@/lib/queries/specialists";
 import { categoryLabel } from "@/lib/categories";
 import { fmtDateTime, fmtRelativeDay } from "@/lib/seoul";
+import { canChat } from "@/lib/rules/session";
+import { cancellationQuote } from "@/lib/rules/refund";
 import { FRAUD_RULE_LABELS, type FraudRule } from "@/lib/rules/fraud";
-import { cancelBooking } from "@/app/actions/booking";
+import { CancellationPreview } from "@/components/CancellationPreview";
 import { resubmitForReview } from "@/app/actions/specialist";
 import { isProfileComplete } from "@/lib/services/admin";
 import { StatusTag } from "@/components/StatusTag";
 import { Notice } from "@/components/Notice";
 import { FormError } from "@/components/FormError";
 import { IconArrow } from "@/components/icons";
+import { SessionEntryButton } from "@/components/session/SessionEntryButton";
+import { BookingAttachments } from "@/components/session/BookingAttachments";
 import type { DictKey } from "@/lib/i18n/dictionary";
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ requested?: string; submitted?: string; error?: string }> }) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ requested?: string; submitted?: string; waiting?: string; cancelled?: string; refundChanged?: string; error?: string }> }) {
   const sp = await searchParams;
   const [{ user, profile }, { t, locale }] = await Promise.all([requireSpecialist(), getT()]);
   const card = getSpecialistCard(user.id)!;
@@ -58,6 +62,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </div>
       <div className="mt-6">
         {(sp.requested || sp.submitted) && <Notice tone="info">{t("onboarding.submitted")}</Notice>}
+        {sp.cancelled && <Notice tone="info">{t("bookings.cancelledOk")}</Notice>}
+        {sp.waiting && <Notice tone="info">{t("session.early")}</Notice>}
         <FormError code={sp.error} />
       </div>
 
@@ -146,18 +152,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   <div className="tnum mt-1 text-[14px] text-ink-2">
                     {fmtDateTime(b.startAt, locale)} · {t("profile.minN", { n: b.durationMin })} · {categoryLabel(b.category, locale)} · {t("common.creditsN", { n: b.price })}
                   </div>
-                  {b.seekerNote && <p className="muted mt-2 text-[14px]">“{b.seekerNote}”</p>}
+                  {b.seekerNote && <p className="muted mt-2 whitespace-pre-wrap text-[14px] [overflow-wrap:anywhere]">“{b.seekerNote}”</p>}
+                  <BookingAttachments bookingId={b.id} startAt={b.startAt} label={t("bookings.preparationFiles")} />
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-2">
-                  <Link href={`/sessions/${b.id}`} className="btn btn-sm btn-primary">
-                    {t("dash.enter")} <IconArrow size={16} />
-                  </Link>
-                  {b.status === "confirmed" && (
-                    <form action={cancelBooking}>
-                      <input type="hidden" name="bookingId" value={b.id} />
-                      <input type="hidden" name="back" value="/specialist/dashboard" />
-                      <button type="submit" className="text-[13px] font-semibold text-ink-3 hover:text-danger">{t("dash.cancel")}</button>
-                    </form>
+                <div className="flex max-w-full shrink-0 flex-col items-end gap-2">
+                  <SessionEntryButton bookingId={b.id} startAt={b.startAt.getTime()} endAt={b.endAt.getTime()} serverNow={now.getTime()} canEnter={canChat(b, user.id, now)} />
+                  {b.status === "confirmed" && b.startAt.getTime() > now.getTime() && (
+                    <CancellationPreview bookingId={b.id} price={b.price} by="specialist" quote={cancellationQuote(b.price, b.startAt, now, "specialist")} quoteChanged={sp.refundChanged === b.id} />
                   )}
                 </div>
               </li>

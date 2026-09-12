@@ -24,3 +24,12 @@ export function cancellationOutcome(startAt: Date, now: Date, by: "seeker" | "sp
   const hoursBefore = (startAt.getTime() - now.getTime()) / 3_600_000;
   return hoursBefore > CANCEL_FREE_HOURS ? "full_refund" : "split";
 }
+
+/** One quote for both the confirmation screen and the eventual ledger entries. */
+export function cancellationQuote(price: number, startAt: Date, now: Date, by: "seeker" | "specialist"): RefundSplit & { outcome: CancellationOutcome } {
+  const outcome = cancellationOutcome(startAt, now, by);
+  return {
+    outcome,
+    ...(outcome === "full_refund" ? { seekerRefund: price, platformFee: 0, specialistPayout: 0 } : refundSplit(price)),
+  };
+}

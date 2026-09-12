@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/provider";
 import { createBooking } from "@/app/actions/booking";
+import { OTHER_CONSULTATION_PURPOSE } from "@/lib/categories";
 import { IconArrow } from "./icons";
 import { LocalizedFileInput } from "./LocalizedFileInput";
 
@@ -18,19 +19,26 @@ export function SlotPicker(props: {
   categories: { id: string; label: string }[];
   loginHref: string;
   disabled?: boolean;
+  initialDuration?: 30 | 60;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const affordable60 = props.balance === null || props.balance >= props.price;
-  const [duration, setDuration] = useState<30 | 60>(affordable60 ? 60 : 30);
+  const [duration, setDuration] = useState<30 | 60>(props.initialDuration ?? (affordable60 ? 60 : 30));
   const days = duration === 60 ? props.days : props.days30;
   const price = duration === 60 ? props.price : props.price30;
   const firstWithSlots = days.findIndex((d) => d.slots.length > 0);
   const [dayIdx, setDayIdx] = useState(firstWithSlots >= 0 ? firstWithSlots : 0);
   const [slot, setSlot] = useState<string | null>(null);
   const [category, setCategory] = useState(props.categories[0]?.id ?? "");
+  const [note, setNote] = useState("");
+  const isOther = category === OTHER_CONSULTATION_PURPOSE.id;
+  const purposes = [
+    ...props.categories.filter((c) => c.id !== OTHER_CONSULTATION_PURPOSE.id),
+    { id: OTHER_CONSULTATION_PURPOSE.id, label: OTHER_CONSULTATION_PURPOSE[locale] },
+  ];
   const day = days[dayIdx];
   const after = useMemo(() => (props.balance === null ? null : props.balance - price), [props.balance, price]);
-  const canSubmit = !!slot && !!category && props.balance !== null && after !== null && after >= 0 && !props.disabled;
+  const canSubmit = !!slot && !!category && (!isOther || note.trim().length > 0) && props.balance !== null && after !== null && after >= 0 && !props.disabled;
 
   return (
     <form action={createBooking} className="min-w-0 space-y-6">
@@ -127,7 +135,7 @@ export function SlotPicker(props: {
       <div>
         <div className="mb-2 text-[13px] font-semibold text-ink-3">{t("profile.category")}</div>
         <div className="flex flex-wrap gap-2">
-          {props.categories.map((c) => {
+          {purposes.map((c) => {
             const active = category === c.id;
             return (
               <button
@@ -148,9 +156,20 @@ export function SlotPicker(props: {
 
       <div>
         <label htmlFor="note" className="mb-2 block text-[13px] font-semibold text-ink-3">
-          {t("profile.note")}
+          {t(isOther ? "profile.otherNote" : "profile.note")}
         </label>
-        <textarea id="note" name="note" className="textarea" placeholder={t("profile.notePh")} maxLength={500} />
+        <textarea
+          id="note"
+          name="note"
+          className="textarea"
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          placeholder={t(isOther ? "profile.otherNotePh" : "profile.notePh")}
+          required={isOther}
+          aria-describedby={isOther ? "other-purpose-hint" : undefined}
+          maxLength={500}
+        />
+        {isOther && <p id="other-purpose-hint" className="mt-1.5 text-[12px] text-ink-3">{t("profile.otherNoteHint")}</p>}
       </div>
 
       <div>

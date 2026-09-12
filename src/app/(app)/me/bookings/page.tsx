@@ -5,14 +5,17 @@ import { requireUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { categoryLabel } from "@/lib/categories";
 import { fmtDateTime, fmtRelativeDay } from "@/lib/seoul";
-import { cancellationOutcome } from "@/lib/rules/refund";
-import { cancelBooking, openDispute } from "@/app/actions/booking";
+import { cancellationQuote } from "@/lib/rules/refund";
+import { canChat } from "@/lib/rules/session";
+import { openDispute } from "@/app/actions/booking";
+import { CancellationPreview } from "@/components/CancellationPreview";
 import { FormError } from "@/components/FormError";
 import { Notice } from "@/components/Notice";
 import { StatusTag } from "@/components/StatusTag";
-import { IconArrow } from "@/components/icons";
+import { SessionEntryButton } from "@/components/session/SessionEntryButton";
+import { BookingAttachments } from "@/components/session/BookingAttachments";
 
-type SP = { booked?: string; reviewed?: string; disputed?: string; cancelled?: string; error?: string };
+type SP = { booked?: string; reviewed?: string; disputed?: string; cancelled?: string; waiting?: string; refundChanged?: string; error?: string };
 
 export default async function MyBookingsPage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
@@ -39,6 +42,7 @@ export default async function MyBookingsPage({ searchParams }: { searchParams: P
         {sp.reviewed && <Notice>{t("bookings.reviewedOk")}</Notice>}
         {sp.disputed && <Notice tone="info">{t("bookings.disputedOk")}</Notice>}
         {sp.cancelled && <Notice tone="info">{t("bookings.cancelledOk")}</Notice>}
+        {sp.waiting && <Notice tone="info">{t("session.early")}</Notice>}
         <FormError code={sp.error} />
       </div>
 
@@ -54,7 +58,7 @@ export default async function MyBookingsPage({ searchParams }: { searchParams: P
         ) : (
           <ul className="mt-3 space-y-3">
             {upcoming.map(({ b, specialist, headline }) => {
-              const outcome = cancellationOutcome(b.startAt, now, "seeker");
+              const quote = cancellationQuote(b.price, b.startAt, now, "seeker");
               return (
                 <li key={b.id} className="card p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -72,25 +76,13 @@ export default async function MyBookingsPage({ searchParams }: { searchParams: P
                       <div className="tnum mt-1 text-[14px] text-ink-2">
                         {fmtDateTime(b.startAt, locale)} · {t("profile.minN", { n: b.durationMin })} · {categoryLabel(b.category, locale)} · {t("common.creditsN", { n: b.price })}
                       </div>
-                      {b.seekerNote && <p className="muted mt-2 text-[14px]">“{b.seekerNote}”</p>}
+                      {b.seekerNote && <p className="muted mt-2 whitespace-pre-wrap text-[14px] [overflow-wrap:anywhere]">“{b.seekerNote}”</p>}
+                      <BookingAttachments bookingId={b.id} startAt={b.startAt} label={t("bookings.preparationFiles")} />
                     </div>
-                    <div className="flex shrink-0 flex-col items-end gap-2">
-                      <Link href={`/sessions/${b.id}`} className="btn btn-sm btn-primary">
-                        {t("bookings.enter")}
-                        <IconArrow size={16} />
-                      </Link>
-                      {b.status === "confirmed" && (
-                        <details className="text-right">
-                          <summary className="cursor-pointer list-none text-[13px] font-semibold text-ink-3 hover:text-ink">{t("bookings.cancel")}</summary>
-                          <form action={cancelBooking} className="mt-2 max-w-[260px] text-left">
-                            <input type="hidden" name="bookingId" value={b.id} />
-                            <input type="hidden" name="back" value="/me/bookings?cancelled=1" />
-                            <p className="text-[13px] text-ink-2">{outcome === "full_refund" ? t("bookings.cancelFull") : t("bookings.cancelSplit")}</p>
-                            <button type="submit" className="btn btn-sm btn-danger mt-2">
-                              {t("bookings.cancel")}
-                            </button>
-                          </form>
-                        </details>
+                    <div className="flex max-w-full shrink-0 flex-col items-end gap-2">
+                      <SessionEntryButton bookingId={b.id} startAt={b.startAt.getTime()} endAt={b.endAt.getTime()} serverNow={now.getTime()} canEnter={canChat(b, user.id, now)} />
+                      {b.status === "confirmed" && b.startAt.getTime() > now.getTime() && (
+                        <CancellationPreview bookingId={b.id} price={b.price} by="seeker" quote={quote} quoteChanged={sp.refundChanged === b.id} />
                       )}
                     </div>
                   </div>

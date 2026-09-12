@@ -1,18 +1,19 @@
 import { eq } from "drizzle-orm";
 import { currentUser } from "@/lib/auth";
 import { db, schema } from "@/lib/db";
-import { isParticipant } from "@/lib/rules/session";
+import { chatBlockReason } from "@/lib/rules/session";
 import { AttachmentError, persistAttachmentFile, recordAttachment } from "@/lib/services/attachments";
 import { publish } from "@/lib/realtime";
 
-/** Upload a file into a session (allowed before and during the session, not after). */
+/** Upload a file during an open session. Booking-time preparation uploads use the booking action. */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
   if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await params;
   const booking = db.select().from(schema.bookings).where(eq(schema.bookings.id, id)).get();
-  if (!booking || !isParticipant(booking, user.id)) return Response.json({ error: "not_participant" }, { status: 403 });
-  if (!(booking.status === "confirmed" || booking.status === "in_progress")) return Response.json({ error: "status" }, { status: 403 });
+  if (!booking) return Response.json({ error: "not_participant" }, { status: 403 });
+  const reason = chatBlockReason(booking, user.id, new Date());
+  if (reason) return Response.json({ error: reason }, { status: 403 });
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
   if (!(file instanceof File)) return Response.json({ error: "empty" }, { status: 400 });

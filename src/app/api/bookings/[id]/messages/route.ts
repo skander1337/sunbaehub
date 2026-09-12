@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { currentUser } from "@/lib/auth";
 import { db, schema } from "@/lib/db";
-import { chatBlockReason, isParticipant } from "@/lib/rules/session";
+import { chatBlockReason, sessionReadBlockReason } from "@/lib/rules/session";
 import { touchSession } from "@/lib/services/booking";
 import { loadMessages, serializeMessage } from "@/lib/services/chat";
 import { publish } from "@/lib/realtime";
@@ -14,7 +14,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await params;
   const booking = db.select().from(schema.bookings).where(eq(schema.bookings.id, id)).get();
-  if (!booking || !isParticipant(booking, user.id)) return Response.json({ error: "not_participant" }, { status: 403 });
+  if (!booking) return Response.json({ error: "not_participant" }, { status: 403 });
+  const reason = sessionReadBlockReason(booking, user.id, new Date());
+  if (reason) return Response.json({ error: reason }, { status: 403 });
   const after = new URL(req.url).searchParams.get("after");
   let all = loadMessages(db, id);
   if (after) {

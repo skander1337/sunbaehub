@@ -3,8 +3,9 @@ import type { Db, Tx } from "@/db";
 import { availabilityRules, bookings, notifications, specialistProfiles, users, type Booking } from "@/db/schema";
 import { priceFor, priceForDuration, priceNote } from "@/lib/rules/pricing";
 import { BRAND } from "@/lib/brand";
+import { OTHER_CONSULTATION_PURPOSE } from "@/lib/categories";
 import { computeSlots, slotExists } from "@/lib/rules/slots";
-import { cancellationOutcome, refundSplit } from "@/lib/rules/refund";
+import { cancellationQuote } from "@/lib/rules/refund";
 import { isParticipant, sessionWindow } from "@/lib/rules/session";
 import { assertBalance, getPlatformUserId, postTx } from "./ledger";
 
@@ -14,7 +15,7 @@ export class SlotUnavailable extends Error {
   }
 }
 export class BookingRuleError extends Error {
-  constructor(public code: "not_participant" | "not_cancellable" | "not_endable" | "own_profile" | "not_verified") {
+  constructor(public code: "not_participant" | "not_cancellable" | "refund_quote_changed" | "not_endable" | "own_profile" | "not_verified" | "other_purpose_required" | "note_length") {
     super(code);
   }
 }
@@ -35,6 +36,9 @@ export function createBooking(
   input: { seekerId: string; specialistId: string; startAt: Date; category: string; note?: string; durationMin?: number },
   now: Date,
 ): Booking {
+  const note = input.note?.trim() ?? "";
+  if (input.category === OTHER_CONSULTATION_PURPOSE.id && !note) throw new BookingRuleError("other_purpose_required");
+  if (note.length > 500) throw new BookingRuleError("note_length");
   const durationMin = (BRAND.durations as readonly number[]).includes(input.durationMin ?? 60) ? (input.durationMin ?? 60) : 60;
   if (input.seekerId === input.specialistId) throw new BookingRuleError("own_profile");
   const profile = tx.select().from(specialistProfiles).where(eq(specialistProfiles.userId, input.specialistId)).get();
@@ -62,7 +66,7 @@ export function createBooking(
       price,
       priceNote: priceNote(pricing, "ko"),
       status: "confirmed",
-      seekerNote: input.note?.trim() || null,
+      seekerNote: note || null,
       createdAt: now,
     })
     .run();
@@ -74,19 +78,22 @@ export function createBooking(
   return tx.select().from(bookings).where(eq(bookings.id, id)).get()!;
 }
 
-export function cancelBooking(tx: Tx | Db, bookingId: string, byUserId: string, now: Date): "full_refund" | "split" {
+export function cancelBooking(tx: Tx | Db, bookingId: string, byUserId: string, now: Date, expectedRefund: number): "full_refund" | "split" {
   const b = tx.select().from(bookings).where(eq(bookings.id, bookingId)).get();
   if (!b || !isParticipant(b, byUserId)) throw new BookingRuleError("not_participant");
   if (b.status !== "confirmed" || b.startAt.getTime() <= now.getTime()) throw new BookingRuleError("not_cancellable");
   const by = byUserId === b.specialistId ? "specialist" : "seeker";
-  const outcome = cancellationOutcome(b.startAt, now, by);
+  const quote = cancellationQuote(b.price, b.startAt, now, by);
+  // A page can stay open across the 24-hour cutoff. Never pay a different
+  // refund than the participant confirmed; show a fresh quote first.
+  if (!Number.isSafeInteger(expectedRefund) || expectedRefund !== quote.seekerRefund) throw new BookingRuleError("refund_quote_changed");
+  const { outcome } = quote;
   if (outcome === "full_refund") {
-    postTx(tx, { userId: b.seekerId, type: "booking_refund", amount: b.price, bookingId: b.id, note: "예약 취소 환불", createdAt: now });
+    postTx(tx, { userId: b.seekerId, type: "booking_refund", amount: quote.seekerRefund, bookingId: b.id, note: "예약 취소 환불", createdAt: now });
   } else {
-    const split = refundSplit(b.price);
-    postTx(tx, { userId: b.seekerId, type: "booking_refund", amount: split.seekerRefund, bookingId: b.id, note: "예약 취소 환불 (50%, 수수료 제외)", createdAt: now });
-    postTx(tx, { userId: b.specialistId, type: "booking_release", amount: split.specialistPayout, bookingId: b.id, note: "당일 취소 보상", createdAt: now });
-    postTx(tx, { userId: getPlatformUserId(tx), type: "platform_fee", amount: split.platformFee, bookingId: b.id, note: "플랫폼 수수료 5%", createdAt: now });
+    postTx(tx, { userId: b.seekerId, type: "booking_refund", amount: quote.seekerRefund, bookingId: b.id, note: "예약 취소 환불 (50%, 수수료 제외)", createdAt: now });
+    postTx(tx, { userId: b.specialistId, type: "booking_release", amount: quote.specialistPayout, bookingId: b.id, note: "당일 취소 보상", createdAt: now });
+    postTx(tx, { userId: getPlatformUserId(tx), type: "platform_fee", amount: quote.platformFee, bookingId: b.id, note: "플랫폼 수수료 5%", createdAt: now });
   }
   tx.update(bookings).set({ status: "cancelled", settledAt: now }).where(eq(bookings.id, b.id)).run();
   const other = by === "seeker" ? b.specialistId : b.seekerId;

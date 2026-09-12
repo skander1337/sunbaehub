@@ -2,12 +2,19 @@ import Link from "next/link";
 import type { SpecialistCardData } from "@/lib/queries/specialists";
 import type { Locale, TFn } from "@/lib/i18n/dictionary";
 import { categoryLabel } from "@/lib/categories";
+import { fmtDateTime } from "@/lib/seoul";
 import { IconCheck } from "./icons";
 
-export function SpecialistCard({ s, locale, t, rank }: { s: SpecialistCardData; locale: Locale; t: TFn; rank?: number }) {
+export function SpecialistCard({ s, locale, t, rank, appointment }: {
+  s: SpecialistCardData;
+  locale: Locale;
+  t: TFn;
+  rank?: number;
+  appointment?: { durationMin: 30 | 60; price: number; nextAvailableAt: Date | null };
+}) {
   return (
     <Link
-      href={`/specialists/${s.id}`}
+      href={`/specialists/${s.id}${appointment ? `?duration=${appointment.durationMin}` : ""}`}
       className="card group flex h-full flex-col gap-4 p-5 transition-[border-color,background-color] duration-200 hover:border-brand/60"
     >
       <div className="flex items-start gap-3">
@@ -35,6 +42,16 @@ export function SpecialistCard({ s, locale, t, rank }: { s: SpecialistCardData; 
           </span>
         ))}
       </div>
+      {appointment && (
+        <div className="text-[13px] leading-relaxed text-ink-2">
+          {appointment.nextAvailableAt ? (
+            <>
+              <p>{t("specialists.nextAvailable")}</p>
+              <time dateTime={appointment.nextAvailableAt.toISOString()} className="tnum font-semibold text-ink">{fmtDateTime(appointment.nextAvailableAt, locale)}</time>
+            </>
+          ) : <p>{t("specialists.noUpcomingSlots")}</p>}
+        </div>
+      )}
       <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-4">
         <div className="text-[13px] text-ink-2">
           {s.reviewCount > 0 ? (
@@ -48,8 +65,8 @@ export function SpecialistCard({ s, locale, t, rank }: { s: SpecialistCardData; 
           )}
         </div>
         <div className="text-right">
-          <div className="tnum text-[18px] font-extrabold tracking-[-0.02em]">{t("common.creditsN", { n: s.pricing.price })}</div>
-          <div className="tnum text-[12px] text-ink-3">{s.pricing.multiplier > 1 ? `×${s.pricing.multiplier.toFixed(2)}` : t("card.base")}</div>
+          <div className="tnum text-[18px] font-extrabold tracking-[-0.02em]">{t("common.creditsN", { n: appointment?.price ?? s.pricing.price })}</div>
+          <div className="tnum text-[12px] text-ink-3">{appointment ? t("specialists.priceDuration", { n: appointment.durationMin }) : s.pricing.multiplier > 1 ? `×${s.pricing.multiplier.toFixed(2)}` : t("card.base")}</div>
         </div>
       </div>
     </Link>

@@ -1,24 +1,35 @@
-// End-to-end check of the demo's centerpiece. Requires `npm run dev` on localhost:3000 (development mode: it uses the
-// dev-only "start now" control). Run `npm run db:seed` afterwards to reset demo data.
+// End-to-end check of the demo's centerpiece. Run only in an isolated, freshly seeded copy with its own dev server.
+// BROWSER_DATABASE_IS_DISPOSABLE=1 BASE_URL=http://localhost:3107 node scripts/e2e-demo.mjs
+// Test fixtures move the booking clock after checking that future rooms cannot be entered.
 import { chromium } from "playwright";
 import Database from "better-sqlite3";
 import assert from "node:assert/strict";
 import { mkdirSync } from "node:fs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3000";
+assert.equal(process.env.BROWSER_DATABASE_IS_DISPOSABLE, "1", "Use an isolated, freshly seeded project/database and explicitly set BROWSER_DATABASE_IS_DISPOSABLE=1");
 mkdirSync(".impeccable/review", { recursive: true });
 const db = new Database("dev.db", { readonly: true });
+const fixtureDb = new Database("dev.db");
+function startFixture(bookingId) {
+  const { duration_min: duration } = db.prepare("select duration_min from bookings where id=?").get(bookingId);
+  const start = Date.now() - 1000;
+  fixtureDb.prepare("update bookings set start_at=?, end_at=? where id=?").run(start, start + duration * 60_000, bookingId);
+}
 const jiwoo = db.prepare("select id, credit_balance as bal from users where email='jiwoo@korea.ac.kr'").get();
 const seojun = db.prepare("select id from users where email='seojun@sunbaehub.demo'").get();
 const input = 'form input[maxlength="2000"]';
 const send = 'form:has(input[maxlength="2000"]) button[type="submit"]';
 const bookingForm = 'form:has(input[name="specialistId"])';
+const failures = [];
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const mk = async (email, password, locale) => {
   const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   await c.addCookies([{ name: "sunbae_locale", value: locale, domain: "localhost", path: "/" }]);
   const p = await c.newPage();
+  p.on("pageerror", (error) => failures.push(error.message));
+  p.on("response", (response) => { if (response.status() >= 500) failures.push(`${response.status()} ${response.url()}`); });
   await p.goto(`${base}/login`);
   await p.fill('input[name="email"]', email);
   await p.fill('input[name="password"]', password);
@@ -75,10 +86,13 @@ console.log(`PASS booking: slot ${slotLabel} booked with attachment, balance ${j
   console.log(`PASS 30-minute booking: ${b30.price} credits (60-min price ${price60}), window is 30 minutes`);
 }
 
-// 2) the attachment is visible in the room before the session starts; then open the window (dev-only control)
+// 2) future rooms are inaccessible; once the fixture reaches its start, booking attachments are available.
+await a.goto(`${base}/sessions/${bookedId}`);
+await a.waitForURL(/\/me\/bookings\?waiting=1/);
+startFixture(bookedId);
 await a.goto(`${base}/sessions/${bookedId}`);
 await a.getByText("minjae.pdf", { exact: true }).waitFor({ timeout: 10_000 });
-console.log("PASS booking attachment: visible in the room before the session");
+console.log("PASS booking attachment: room is blocked before start and attachment is visible once started");
 await a.getByRole("button", { name: "데모: 지금 시작" }).click();
 await a.waitForFunction((sel) => { const el = document.querySelector(sel); return el && !el.disabled; }, input, { timeout: 15_000 });
 await b.goto(`${base}/sessions/${bookedId}`);
@@ -147,6 +161,7 @@ await a.getByRole("heading", { name: "상담 확인서", exact: true, level: 1 }
 console.log("PASS review, single settlement, and direct certificate link");
 
 // 9) the recording controls preserve a 30-minute booking and valid timestamps
+startFixture(shortBookingId);
 await a.goto(`${base}/sessions/${shortBookingId}`);
 await a.getByRole("button", { name: "데모: 지금 시작", exact: true }).click();
 await a.waitForFunction((sel) => !document.querySelector(sel)?.disabled, input);
@@ -157,5 +172,8 @@ await a.getByRole("link", { name: "리뷰 남기기", exact: true }).waitFor();
 short = db.prepare("select start_at, end_at from bookings where id=?").get(shortBookingId);
 assert.ok(short.end_at > short.start_at);
 console.log("PASS demo time controls: 30-minute duration preserved; end stays after start");
+assert.deepEqual(failures, [], "no browser/runtime errors or HTTP 500 responses");
 
 await browser.close();
+fixtureDb.close();
+db.close();

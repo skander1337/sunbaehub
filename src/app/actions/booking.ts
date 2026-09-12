@@ -56,15 +56,18 @@ export async function createBooking(formData: FormData) {
 export async function cancelBooking(formData: FormData) {
   const user = await requireUser();
   const bookingId = String(formData.get("bookingId") ?? "");
-  const back = String(formData.get("back") ?? "/me/bookings");
+  const back = formData.get("back") === "/specialist/dashboard" ? "/specialist/dashboard" : "/me/bookings";
+  const submittedRefund = formData.get("expectedRefund");
+  const expectedRefund = typeof submittedRefund === "string" && /^\d+$/.test(submittedRefund) ? Number(submittedRefund) : Number.NaN;
   try {
-    db.transaction((tx) => cancelBookingSvc(tx, bookingId, user.id, new Date()));
+    db.transaction((tx) => cancelBookingSvc(tx, bookingId, user.id, new Date(), expectedRefund));
   } catch (e) {
+    if (e instanceof BookingRuleError && e.code === "refund_quote_changed") redirect(`${back}?refundChanged=${encodeURIComponent(bookingId)}`);
     if (e instanceof BookingRuleError) fail(back, e.code);
     throw e;
   }
   revalidatePath("/", "layout");
-  redirect(back);
+  redirect(`${back}?cancelled=1`);
 }
 
 export async function endSession(formData: FormData) {

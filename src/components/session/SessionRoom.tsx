@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/provider";
 import { IconPaperclip, IconPhone, IconSend } from "@/components/icons";
 import type { WireMessage } from "@/lib/services/chat";
+import { sessionWindow } from "@/lib/rules/session";
 
 export type ChatMessage = WireMessage;
 
@@ -19,6 +20,7 @@ type Props = {
   phase: "early" | "open" | "closed";
   startAt: string;
   endAt: string;
+  serverNow: number;
 };
 
 function fmtClock(ms: number) {
@@ -39,7 +41,7 @@ export function SessionRoom(p: Props) {
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [showOriginal, setShowOriginal] = useState<Set<string>>(new Set());
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(p.serverNow);
   const [live, setLive] = useState(false);
   const [typingName, setTypingName] = useState<string | null>(null);
   const [inCall, setInCall] = useState(false);
@@ -66,22 +68,27 @@ export function SessionRoom(p: Props) {
 
   // wall clock + phase transitions
   useEffect(() => {
-    const iv = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(iv);
-  }, []);
+    const mountedAt = performance.now();
+    const tick = () => setNow(p.serverNow + performance.now() - mountedAt);
+    const frame = requestAnimationFrame(tick);
+    const iv = setInterval(tick, 1000);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearInterval(iv);
+    };
+  }, [p.serverNow]);
   useEffect(() => {
-    const start = new Date(p.startAt).getTime() - 5 * 60_000;
-    const end = new Date(p.endAt).getTime() + 5 * 60_000;
-    const phase = now < start ? "early" : now > end ? "closed" : "open";
+    if (p.phase === "closed") return;
+    const phase = sessionWindow({ startAt: new Date(p.startAt), endAt: new Date(p.endAt) }, new Date(now));
     if (phase !== phaseRef.current) {
       phaseRef.current = phase;
       router.refresh();
     }
-  }, [now, p.startAt, p.endAt, router]);
+  }, [now, p.phase, p.startAt, p.endAt, router]);
 
   // live stream (SSE) with polling fallback
   useEffect(() => {
-    if (p.phase === "closed") return;
+    if (p.phase !== "open") return;
     const es = new EventSource(`/api/bookings/${p.bookingId}/stream`);
     es.addEventListener("hello", () => setLive(true));
     es.addEventListener("message", (e) => append([JSON.parse((e as MessageEvent).data) as ChatMessage]));
@@ -113,7 +120,7 @@ export function SessionRoom(p: Props) {
     }
   }, [p.bookingId, append, router]);
   useEffect(() => {
-    if (p.phase === "closed") return;
+    if (p.phase !== "open") return;
     const iv = setInterval(poll, live ? 15_000 : 2_500);
     return () => clearInterval(iv);
   }, [poll, p.phase, live]);
@@ -212,7 +219,7 @@ export function SessionRoom(p: Props) {
               type="button"
               onClick={() => {
                 setInCall((v) => !v);
-                setCallStart((v) => (v ? null : Date.now()));
+                setCallStart((v) => (v ? null : now));
               }}
               className={`btn btn-sm ${inCall ? "btn-danger" : "btn-outline"}`}
             >

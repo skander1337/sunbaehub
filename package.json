@@ -13,7 +13,11 @@
     "setup": "npm run db:push && npm run db:seed",
     "e2e": "node scripts/e2e-demo.mjs",
     "e2e:admin": "node scripts/e2e-admin.mjs",
+    "e2e:booking": "node scripts/e2e-booking-gates.mjs",
+    "e2e:qol": "node scripts/e2e-qol.mjs",
     "test:business": "tsx scripts/business-check.ts",
+    "test:discovery": "tsx scripts/discovery-check.ts",
+    "test:refund": "tsx scripts/refund-check.ts",
     "make:cvs": "node scripts/make-cvs.mjs",
     "e2e:onboarding": "node scripts/onboarding-check.mjs",
     "host": "scripts/host.sh"

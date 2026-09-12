@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { categoryLabel } from "@/lib/categories";
 import { fmtDateTime, fmtTime } from "@/lib/seoul";
-import { canChat, isParticipant, sessionWindow } from "@/lib/rules/session";
+import { canChat, isParticipant, sessionReadBlockReason, sessionWindow } from "@/lib/rules/session";
 import { touchSession } from "@/lib/services/booking";
 import { devShiftBooking, endSession } from "@/app/actions/booking";
 import { SessionRoom } from "@/components/session/SessionRoom";
@@ -16,10 +16,13 @@ import { FormError } from "@/components/FormError";
 
 export default async function SessionPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> }) {
   const [{ id }, { error }] = await Promise.all([params, searchParams]);
-  const [user, { t, locale }] = await Promise.all([requireUser(`/sessions/${(await params).id}`), getT()]);
+  const [user, { t, locale }] = await Promise.all([requireUser(`/sessions/${id}`), getT()]);
   const now = new Date();
   let booking = db.select().from(schema.bookings).where(eq(schema.bookings.id, id)).get();
   if (!booking || !isParticipant(booking, user.id)) notFound();
+  if (sessionReadBlockReason(booking, user.id, now) === "early") {
+    redirect(booking.seekerId === user.id ? "/me/bookings?waiting=1" : "/specialist/dashboard?waiting=1");
+  }
   booking = db.transaction((tx) => touchSession(tx, booking!, now));
 
   const otherId = booking.seekerId === user.id ? booking.specialistId : booking.seekerId;
@@ -70,7 +73,7 @@ export default async function SessionPage({ params, searchParams }: { params: Pr
       <div className="mt-5">
         <FormError code={error} />
       </div>
-      {booking.seekerNote && !isSeeker && <p className="panel mb-4 px-4 py-3 text-[14px] text-ink-2">“{booking.seekerNote}”</p>}
+      {booking.seekerNote && <p className="panel mb-4 whitespace-pre-wrap px-4 py-3 text-[14px] text-ink-2 [overflow-wrap:anywhere]">“{booking.seekerNote}”</p>}
 
       <SessionRoom
         bookingId={booking.id}
@@ -79,10 +82,11 @@ export default async function SessionPage({ params, searchParams }: { params: Pr
         otherInitial={other.name.slice(0, 1)}
         initialMessages={serialized}
         canSend={canChat(booking, user.id, now)}
-        uploadAllowed={live}
+        uploadAllowed={canChat(booking, user.id, now)}
         phase={phase}
         startAt={booking.startAt.toISOString()}
         endAt={booking.endAt.toISOString()}
+        serverNow={now.getTime()}
       />
 
       {dev && live && (

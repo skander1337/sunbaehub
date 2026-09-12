@@ -4,9 +4,10 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { generateSQLiteDrizzleJson, generateSQLiteMigration } from "drizzle-kit/api";
 import * as schema from "../src/db/schema";
-import { BookingRuleError, SlotUnavailable, createBooking, devShiftBooking } from "../src/lib/services/booking";
+import { BookingRuleError, SlotUnavailable, createBooking, devShiftBooking, endSession, touchSession } from "../src/lib/services/booking";
 import { settleBooking, settleDueBookings } from "../src/lib/services/settlement";
-import { sessionWindow } from "../src/lib/rules/session";
+import { canChat, chatBlockReason, sessionReadBlockReason, sessionWindow } from "../src/lib/rules/session";
+import { CATEGORIES, categoryLabel } from "../src/lib/categories";
 
 // Run with: npx tsx scripts/business-check.ts
 // Generate the real application schema in memory; never open or mutate dev.db.
@@ -53,7 +54,85 @@ async function main() {
     assert.equal(db.select().from(schema.creditTransactions).all().length, 1);
     console.log("PASS: verification, booking charge, and duplicate-slot protection");
 
+    const customPurposeInput = { ...input, category: "other", startAt: new Date(input.startAt.getTime() + 60 * minute) };
+    const beforeInvalidPurpose = {
+      bookings: db.select().from(schema.bookings).all(),
+      transactions: db.select().from(schema.creditTransactions).all(),
+      notifications: db.select().from(schema.notifications).all(),
+      balance: db.select().from(schema.users).where(eq(schema.users.id, "seeker")).get()!.creditBalance,
+    };
+    for (const note of [undefined, "", "  \n\t ", "\u3000"]) {
+      assert.throws(() => db.transaction((tx) => createBooking(tx, { ...customPurposeInput, note }, now)),
+        (error: unknown) => error instanceof BookingRuleError && error.code === "other_purpose_required");
+    }
+    assert.throws(() => db.transaction((tx) => createBooking(tx, { ...customPurposeInput, note: "a".repeat(501) }, now)),
+      (error: unknown) => error instanceof BookingRuleError && error.code === "note_length");
+    assert.throws(() => db.transaction((tx) => createBooking(tx, { ...customPurposeInput, category: "resume", note: "a".repeat(501) }, now)),
+      (error: unknown) => error instanceof BookingRuleError && error.code === "note_length");
+    assert.deepEqual({
+      bookings: db.select().from(schema.bookings).all(),
+      transactions: db.select().from(schema.creditTransactions).all(),
+      notifications: db.select().from(schema.notifications).all(),
+      balance: db.select().from(schema.users).where(eq(schema.users.id, "seeker")).get()!.creditBalance,
+    }, beforeInvalidPurpose, "invalid custom purposes must not reserve a slot or charge credits");
+    const customPurpose = db.transaction((tx) => createBooking(tx, {
+      ...customPurposeInput, note: "  첫 인턴 지원 준비 순서를 상담하고 싶어요.  ",
+    }, now));
+    assert.equal(customPurpose.category, "other");
+    assert.equal(customPurpose.seekerNote, "첫 인턴 지원 준비 순서를 상담하고 싶어요.");
+    assert.equal(customPurpose.price, 50);
+    assert.equal(db.select().from(schema.users).where(eq(schema.users.id, "seeker")).get()!.creditBalance, 900);
+    assert.equal(categoryLabel("other", "ko"), "기타");
+    assert.equal(categoryLabel("other", "en"), "Other");
+    assert.equal(CATEGORIES.some((category) => String(category.id) === "other"), false, "custom purpose is not specialist expertise");
+    const maxLengthPurpose = db.transaction((tx) => createBooking(tx, {
+      ...customPurposeInput, startAt: new Date(customPurposeInput.startAt.getTime() + 60 * minute), note: `  ${"가".repeat(500)}  `,
+    }, now));
+    assert.equal(maxLengthPurpose.seekerNote, "가".repeat(500));
+    console.log("PASS: Other purpose requires an explanation, rejects oversize notes without side effects, and saves valid details");
+
     const bookingById = (id: string) => db.select().from(schema.bookings).where(eq(schema.bookings.id, id)).get()!;
+    for (const userId of ["seeker", "expert"]) {
+      for (const status of ["confirmed", "in_progress"]) {
+        const live = { ...booked, status };
+        for (const offset of [-5 * minute, -1]) {
+          const beforeStart = new Date(live.startAt.getTime() + offset);
+          assert.equal(sessionWindow(live, beforeStart), "early");
+          assert.equal(canChat(live, userId, beforeStart), false);
+          assert.equal(chatBlockReason(live, userId, beforeStart), "early");
+          assert.equal(sessionReadBlockReason(live, userId, beforeStart), "early");
+        }
+        assert.equal(canChat(live, userId, live.startAt), true);
+        assert.equal(chatBlockReason(live, userId, live.startAt), null);
+        assert.equal(sessionReadBlockReason(live, userId, live.startAt), null);
+        const graceEnd = new Date(live.endAt.getTime() + 5 * minute);
+        assert.equal(canChat(live, userId, graceEnd), true);
+        assert.equal(chatBlockReason(live, userId, new Date(graceEnd.getTime() + 1)), "closed");
+      }
+      for (const status of ["completed", "cancelled", "disputed", "refunded"]) {
+        const past = { ...booked, status };
+        assert.equal(canChat(past, userId, past.endAt), false);
+        assert.equal(chatBlockReason(past, userId, past.endAt), "status");
+        assert.equal(sessionReadBlockReason(past, userId, past.endAt), null, "past transcript remains readable");
+      }
+      const beforeStart = new Date(booked.startAt.getTime() - 1);
+      assert.equal(touchSession(db, booked, beforeStart).status, "confirmed");
+      assert.equal(bookingById(booked.id).status, "confirmed");
+      assert.throws(() => db.transaction((tx) => endSession(tx, booked.id, userId, beforeStart)),
+        (error: unknown) => error instanceof BookingRuleError && error.code === "not_endable");
+      assert.equal(bookingById(booked.id).status, "confirmed");
+    }
+    assert.equal(chatBlockReason(booked, "outsider", booked.startAt), "not_participant");
+    assert.equal(sessionReadBlockReason(booked, "outsider", booked.endAt), "not_participant");
+    for (const userId of ["seeker", "expert"]) {
+      const id = `exact-start-${userId}`;
+      db.insert(schema.bookings).values({ ...booked, id }).run();
+      assert.equal(touchSession(db, bookingById(id), booked.startAt).status, "in_progress");
+      assert.equal(bookingById(id).status, "in_progress");
+      assert.equal(db.transaction((tx) => endSession(tx, id, userId, booked.startAt)).status, "completed");
+    }
+    console.log("PASS: both participants are blocked until exact start, end grace is retained, and past transcripts are read-only");
+
     for (const durationMin of [30, 60]) {
       const id = `demo-${durationMin}`;
       db.insert(schema.bookings).values({

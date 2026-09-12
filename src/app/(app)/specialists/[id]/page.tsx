@@ -13,8 +13,9 @@ import { SlotPicker, type PickerDay } from "@/components/SlotPicker";
 import { FormError } from "@/components/FormError";
 import { IconCheck, IconFlag } from "@/components/icons";
 
-export default async function SpecialistPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> }) {
-  const [{ id }, { error }] = await Promise.all([params, searchParams]);
+export default async function SpecialistPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; duration?: string }> }) {
+  const [{ id }, { error, duration }] = await Promise.all([params, searchParams]);
+  const initialDuration = duration === "30" ? 30 : duration === "60" ? 60 : undefined;
   const [{ t, locale }, user] = await Promise.all([getT(), currentUser()]);
   const card = getSpecialistCard(id);
   if (!card) notFound();
@@ -198,6 +199,7 @@ export default async function SpecialistPage({ params, searchParams }: { params:
               <p className="muted text-[14px]">{t("error.own_profile")}</p>
             ) : (
               <SlotPicker
+                key={`${id}:${initialDuration ?? "auto"}`}
                 specialistId={id}
                 days={days}
                 days30={days30}
@@ -205,7 +207,8 @@ export default async function SpecialistPage({ params, searchParams }: { params:
                 price30={card.price30}
                 balance={user ? user.creditBalance : null}
                 categories={card.categories.map((c) => ({ id: c, label: categoryLabel(c, locale) }))}
-                loginHref={`/login?next=${encodeURIComponent(`/specialists/${id}`)}`}
+                initialDuration={initialDuration}
+                loginHref={`/login?next=${encodeURIComponent(`/specialists/${id}${initialDuration ? `?duration=${initialDuration}` : ""}`)}`}
               />
             )}
           </div>
