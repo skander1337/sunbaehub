@@ -1,0 +1,72 @@
+{
+  "title": "Landing page for judges: choose the visual world",
+  "question": "Re-rolled under the safer register for a judge-facing landing. Three familiar, legible directions plus the category standard. You pick.",
+  "options": [
+    {
+      "id": "grounded-ledger",
+      "label": "라이브 원장 · Live Ledger",
+      "lineage": "Korean fintech ledger grammar (Toss, KakaoBank): large tabular numerals, hairline rows, one action color",
+      "thesis": "The first viewport is the credit system running: one consultation plays out as a live ledger, hold → session → review → release, and the specialist's price multiplier updates in front of the judge.",
+      "palette": ["#ffffff", "#16191f", "#f1f3f5", "#2b44a8"],
+      "materials": ["tabular numerals", "hairline rows", "soft mist panels", "one indigo action color"],
+      "viewport": "Left: the one-line pitch in Korean with its English line directly beneath, and two equal actions (find a sunbae / become a sunbae). Right: a ledger card where a seeded consultation plays out in about ten seconds: 100 credits held, the session runs, a 92-point review posts, 95 released and 5 fee, and 박서준's rate ticks from 1.30× to 1.35× with its reason printed.",
+      "risk": "Familiar: this is the Korean fintech default, and a judge may read banking app before mentoring unless the first line says consultation.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "nav", "x": 0, "y": 0, "w": 12, "h": 1 },
+        { "label": "pitch + two actions", "x": 0, "y": 1, "w": 5, "h": 6 },
+        { "label": "live ledger card", "x": 6, "y": 1, "w": 6, "h": 6, "accent": true },
+        { "label": "how it works, three steps", "x": 0, "y": 7, "w": 12, "h": 1 },
+        { "label": "demo specialists strip", "x": 0, "y": 8, "w": 12, "h": 2 }
+      ] },
+      "comp": ".impeccable/mocks/decision/grounded-ledger.webp"
+    },
+    {
+      "id": "grounded-card-exchange",
+      "label": "명함 교환 · The Card Exchange",
+      "lineage": "the two-handed 명함 (business card) exchange ritual",
+      "thesis": "A specialist is a 명함 and booking is receiving the card; the first viewport is the exchange itself.",
+      "palette": ["#f7f7f5", "#1a1a1a", "#b8b2a7", "#2b44a8"],
+      "materials": ["heavy card stock", "letterpress name", "two-hands motion"],
+      "viewport": "A specialist's card slides forward and flips to show 리뷰 12 · 평균 88 · 135 credits; a seeker's card answers from the other side. Each card carries its own action; the pitch line sits above in Korean with English beneath.",
+      "risk": "Card heroes are common, the ritual reads East-Asia-specific to some judges, and the pricing mechanism only lives on the card back.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "nav", "x": 0, "y": 0, "w": 12, "h": 1 },
+        { "label": "pitch line", "x": 0, "y": 1, "w": 12, "h": 1 },
+        { "label": "specialist card", "x": 1, "y": 3, "w": 4, "h": 4, "accent": true },
+        { "label": "seeker card", "x": 7, "y": 3, "w": 4, "h": 4 },
+        { "label": "demo specialists strip", "x": 0, "y": 8, "w": 12, "h": 2 }
+      ] },
+      "comp": ".impeccable/mocks/decision/grounded-card-exchange.webp"
+    },
+    {
+      "id": "grounded-timetable",
+      "label": "시간표 · The Timetable",
+      "lineage": "the campus timetable grid every Korean student keeps (에브리타임)",
+      "thesis": "The availability grid is the hero: the judge watches a real slot get booked and credits move.",
+      "palette": ["#ffffff", "#1b1b1b", "#e9ecef", "#2b44a8"],
+      "materials": ["seven-column grid", "slot blocks", "hairline hours"],
+      "viewport": "A week grid at object scale with a specialist's open slots; one slot highlights, a booking lands, credits are held, and the row beneath prints the price note. Pitch line and two actions sit above the grid.",
+      "risk": "Reads as a calendar app first, is dense on mobile, and the campus reference is lost on judges.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "nav", "x": 0, "y": 0, "w": 12, "h": 1 },
+        { "label": "pitch + two actions", "x": 0, "y": 1, "w": 12, "h": 2 },
+        { "label": "week grid", "x": 0, "y": 3, "w": 12, "h": 5, "accent": true },
+        { "label": "price note row", "x": 0, "y": 8, "w": 12, "h": 1 }
+      ] },
+      "comp": ".impeccable/mocks/decision/grounded-timetable.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "steer": true,
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "The mentoring-marketplace landing as ADPList, Intro.co, and 코멘토 ship it: headline, search, mentor photo cards, how it works, trust row, executed impeccably.",
+    "palette": ["#ffffff", "#111827", "#2563eb"],
+    "materials": ["clean grid", "portrait photography"],
+    "viewport": "Headline and search over a row of mentor cards, three how-it-works steps, a trust row, a sign-up footer.",
+    "risk": "Indistinguishable from ADPList and Intro by design, and it wants testimonials and logos the product does not have.",
+    "comp": ".impeccable/mocks/decision/canon.webp"
+  },
+  "buildPath": { "value": "code", "toggle": false }
+}

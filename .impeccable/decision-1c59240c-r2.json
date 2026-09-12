@@ -1,0 +1,88 @@
+{
+  "title": "Sunbae landing page: choose the look",
+  "question": "All four are normal product landing pages at the Toss · 당근 · Kakao craft level, with different identities. Pick one, steer, or re-roll.",
+  "options": [
+    {
+      "id": "grounded-toss-white",
+      "label": "화이트 · Product-Screen Hero",
+      "lineage": "Toss-style consumer landing: white ground, one accent, the real product as the hero image",
+      "thesis": "A white page where the hero image is a real Sunbae card: the visitor sees a specialist, a price with its reason, and a bookable slot before reading a second line.",
+      "palette": ["#ffffff", "#191f28", "#f2f4f6", "#2b44a8"],
+      "materials": ["real product cards on mist panels", "pill buttons", "hairline dividers", "tabular numerals"],
+      "viewport": "Nav. Left 7/12: headline 취업 고민, 선배에게 1시간 with its English line, two buttons (선배 찾기 / 선배 되기), three plain trust lines. Right 5/12: 박서준's real specialist card on a mist panel, its 1.35× price note counting up. Below: how it works in three steps, category chips, demo specialists strip, the credit rules, a two-path close.",
+      "risk": "Closest to Toss itself; anyone who knows Toss will see the family resemblance.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "nav", "x": 0, "y": 0, "w": 12, "h": 1 },
+        { "label": "headline + subline + two buttons", "x": 0, "y": 1, "w": 7, "h": 5 },
+        { "label": "real specialist card on mist", "x": 7, "y": 1, "w": 5, "h": 5, "accent": true },
+        { "label": "how it works · 3 steps", "x": 0, "y": 6, "w": 12, "h": 2 },
+        { "label": "demo specialists strip", "x": 0, "y": 8, "w": 12, "h": 2 }
+      ] },
+      "comp": ".impeccable/mocks/decision/grounded-toss-white.webp"
+    },
+    {
+      "id": "grounded-warm-friendly",
+      "label": "웜 · Friendly Centered",
+      "lineage": "당근-style warmth: soft off-white, rounded panels, a single warm accent, centered copy",
+      "thesis": "A centered, warm, neighborly page: one headline, one product screen, then feature rows that each show a real screen of the product.",
+      "palette": ["#fbfaf7", "#1f1f1f", "#f1ede6", "#e8590c"],
+      "materials": ["rounded 20px panels", "crisp warm off-white ground", "600-weight friendly headlines", "one amber accent"],
+      "viewport": "Nav. Centered headline and English subline, two buttons. Below them a full-width product screen (the specialists directory) on a warm panel. Then alternating rows: booking, session room, refund rule, each with its real screen. Demo specialists strip, close.",
+      "risk": "A warm ground with an amber accent drifts toward the cream-and-terracotta default unless the ground stays crisp and the accent stays rare.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "nav", "x": 0, "y": 0, "w": 12, "h": 1 },
+        { "label": "centered headline + subline + buttons", "x": 2, "y": 1, "w": 8, "h": 3 },
+        { "label": "full-width product screen on warm panel", "x": 1, "y": 4, "w": 10, "h": 4, "accent": true },
+        { "label": "feature row: booking", "x": 0, "y": 8, "w": 12, "h": 2 }
+      ] },
+      "comp": ".impeccable/mocks/decision/grounded-warm-friendly.webp"
+    },
+    {
+      "id": "grounded-indigo-field",
+      "label": "인디고 · Color-Field Hero",
+      "lineage": "Kakao-style committed color: one brand field owns the top of the page, product screens overlap its edge",
+      "thesis": "One indigo field owns the first viewport with white type; a white product screen rises through its bottom edge, and everything below is calm white.",
+      "palette": ["#2b44a8", "#ffffff", "#191f28", "#eef1fb"],
+      "materials": ["full-bleed indigo hero field", "white product screen overlapping the field edge", "black on white below", "one accent tint"],
+      "viewport": "An indigo field covers the first 70% of the viewport: white headline, English subline, a white primary button and an outline secondary. The booking slot picker, as a real white screen, rises over the field's bottom edge. Below on white: how it works, category chips, demo specialists strip, credit rules, close.",
+      "risk": "A large color field reads corporate or bank-like if the type is set timidly, and it is the hardest of the four to keep minimal.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "nav (on field)", "x": 0, "y": 0, "w": 12, "h": 1, "accent": true },
+        { "label": "indigo field: headline + buttons", "x": 0, "y": 1, "w": 12, "h": 4, "accent": true },
+        { "label": "product screen overlapping the edge", "x": 3, "y": 4, "w": 6, "h": 3 },
+        { "label": "how it works · categories", "x": 0, "y": 7, "w": 12, "h": 3 }
+      ] },
+      "comp": ".impeccable/mocks/decision/grounded-indigo-field.webp"
+    },
+    {
+      "id": "grounded-editorial-type",
+      "label": "타이포 · Editorial Minimal",
+      "lineage": "type-led minimal pages: oversized Hangul display, a ruled grid, product screens as small figures",
+      "thesis": "The headline is the hero. Oversized Korean display type on white, a 1px ruled grid, product screens as inline figures, color only on the primary action.",
+      "palette": ["#ffffff", "#111111", "#d9d9d9", "#2b44a8"],
+      "materials": ["oversized Hangul display", "1px ruled grid", "inline product figures", "accent only on the primary action"],
+      "viewport": "The headline spans the full width at display size with the English line beneath; both buttons sit on one baseline. Below the fold, the categories are a ruled list of large type rows, each with a small product figure. Then the demo specialists as a ruled table, credit rules, close.",
+      "risk": "Reads austere or luxury rather than friendly, and large Hangul display needs careful line breaks on mobile.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "nav", "x": 0, "y": 0, "w": 12, "h": 1 },
+        { "label": "full-width display headline", "x": 0, "y": 1, "w": 12, "h": 3 },
+        { "label": "English line + two buttons on one baseline", "x": 0, "y": 4, "w": 12, "h": 1, "accent": true },
+        { "label": "ruled category rows with figures", "x": 0, "y": 5, "w": 12, "h": 5 }
+      ] },
+      "comp": ".impeccable/mocks/decision/grounded-editorial-type.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "steer": true,
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "The mentoring-marketplace landing as ADPList, Intro.co, and 코멘토 ship it: headline, search, mentor photo cards, how it works, trust row, executed impeccably.",
+    "palette": ["#ffffff", "#111827", "#2563eb"],
+    "materials": ["clean grid", "portrait photography"],
+    "viewport": "Headline and search over a row of mentor cards, three how-it-works steps, a trust row, a sign-up footer.",
+    "risk": "Indistinguishable from ADPList and Intro by design, and it wants testimonials and logos the product does not have.",
+    "comp": ".impeccable/mocks/decision/canon.webp"
+  },
+  "buildPath": { "value": "code", "toggle": false }
+}

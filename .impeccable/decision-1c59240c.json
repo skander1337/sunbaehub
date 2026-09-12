@@ -1,0 +1,148 @@
+{
+  "title": "Choose the visual world for the Sunbae landing page",
+  "question": "The roll assigned 모집공고 (the Korean recruitment-notice world). Keep it, take the pick or an alternate, or re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "모집공고 · Recruitment Notice",
+      "kicker": "THE ROLL",
+      "lineage": "Korean 채용공고 tables: 사람인·잡코리아 listings and corporate 공채 notices",
+      "thesis": "The landing page is itself a recruitment notice: 후배 모집 and 선배 모집 side by side, written in the exact table grammar every 취준생 reads daily.",
+      "palette": ["#ffffff", "#101418", "#dde1e6", "#12306b", "#d62828"],
+      "materials": ["hairline table rules", "inverted 마감임박 tags", "red 접수 stamp", "tabular numerals"],
+      "viewport": "A full-width notice band (선배 · 2026 하반기 모집공고), then two equal 모집부문 columns, 후배 and 선배, each a ruled table of 자격요건 / 우대사항 / 크레딧 / 접수기간 with a live D-day and its own 지원하기 action; the live specialist table starts directly below as posting rows.",
+      "risk": "Reads as a job board if the first line does not say consultation, and dense tables need real care on mobile.",
+      "raised": [
+        { "from": "challenger-code-cascade", "raise": "One material owns the whole first viewport: the notice is a single continuous document, no hero-then-cards split." },
+        { "from": "challenger-gameboy", "raise": "Exactly one ink, one paper, one notice navy, one deadline red; hierarchy comes from rules and inversion, never extra color." },
+        { "from": "challenger-pickling", "raise": "Every specialist row carries the same fixed data band: 리뷰 · 평균 · 배율 · 크레딧 · 다음 가능 D-day." },
+        { "from": "challenger-paper-menagerie", "raise": "All landing motion runs on one orchestrated timeline (D-day ticks, rows filling, the 접수 stamp); reduced motion shows the final keyframe." },
+        { "from": "challenger-phosphor-terminal", "raise": "States print themselves as text inside the table (예약 가능 · 마감 · 검토 중), never as floating chrome." },
+        { "from": "challenger-ascii-scene", "raise": "One strict column grid governs the entire page; captions and buttons sit on the table's own columns." }
+      ],
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "notice band", "x": 0, "y": 0, "w": 12, "h": 2, "accent": true },
+        { "label": "후배 모집 table", "x": 0, "y": 2, "w": 6, "h": 4 },
+        { "label": "선배 모집 table", "x": 6, "y": 2, "w": 6, "h": 4 },
+        { "label": "live specialist posting rows", "x": 0, "y": 6, "w": 12, "h": 4 }
+      ] },
+      "comp": ".impeccable/mocks/decision/assigned.webp"
+    },
+    {
+      "id": "model-pick",
+      "label": "학생증 → 사원증 · ID to Badge",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "the student ID card and the employee badge, the two plastic cards of graduating",
+      "thesis": "Two cards face each other, a student ID and an employee badge, and credits pass between them.",
+      "palette": ["#f2f4f7", "#1b1f2a", "#2e5bff", "#c9ced6"],
+      "materials": ["matte PVC card", "holographic strip", "lanyard clip", "embossed numerals"],
+      "viewport": "Two cards at object scale in the first viewport, a seeker ID on the left and a specialist badge on the right, credits animating between them; each card carries its own primary action.",
+      "risk": "Familiar: a two-card hero is where most runs land for this product, and card objects drift toward the generic fintech look.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "nav", "x": 0, "y": 0, "w": 12, "h": 1 },
+        { "label": "seeker ID card", "x": 1, "y": 2, "w": 4, "h": 5, "accent": true },
+        { "label": "credits in motion", "x": 5, "y": 4, "w": 2, "h": 1 },
+        { "label": "specialist badge", "x": 7, "y": 2, "w": 4, "h": 5, "accent": true },
+        { "label": "two actions", "x": 1, "y": 8, "w": 10, "h": 1 }
+      ] },
+      "comp": ".impeccable/mocks/decision/model-pick.webp"
+    },
+    {
+      "id": "challenger-code-cascade",
+      "label": "Code Cascade Terminal",
+      "verdict": "declined",
+      "lineage": "cyberpunk glyph-rain terminal",
+      "thesis": "Hangul and digits rain over black; specialists surface as wireframe panes.",
+      "palette": ["#000000", "#39ff8a", "#b6ffd1", "#1f2a24"],
+      "materials": ["phosphor glyph rain", "wireframe overlay"],
+      "viewport": "A canvas of falling glyphs with one pane frozen to legibility.",
+      "case": "Fuses poorly: a graduate seeking 자소서 help does not identify with hacker fiction, and falling glyphs hide prices.",
+      "kept": "One material owning the whole viewport.",
+      "risk": "Reads as a coding-bootcamp gimmick.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-code-cascade-terminal-hero.webp"
+    },
+    {
+      "id": "challenger-gameboy",
+      "label": "Game Boy Four-Shade Field",
+      "verdict": "declined",
+      "lineage": "four-green 8×8 tile handheld",
+      "thesis": "Specialists listed in bordered menu boxes at one pixel size.",
+      "palette": ["#9bbc0f", "#8bac0f", "#306230", "#0f380f"],
+      "materials": ["8×8 tile grid", "dither checker"],
+      "viewport": "A 160×144 frame with a blinking arrow at the next step.",
+      "case": "Violates the no-playful-tone commitment outright, and one type size cannot carry a credit ledger.",
+      "kept": "A tiny exact palette with hierarchy by inversion and borders.",
+      "risk": "Nostalgia toy, not a service.",
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-gameboy-four-shade-field-hero.webp"
+    },
+    {
+      "id": "challenger-pickling",
+      "label": "Pickling Brine Calendar",
+      "verdict": "declined",
+      "lineage": "seasonal fermentation jars on shelf lines",
+      "thesis": "Specialists as jars maturing with each review.",
+      "palette": ["#f3efe6", "#e56b5a", "#8c1d3a", "#c79b5b"],
+      "materials": ["jar glass", "kraft labels"],
+      "viewport": "Jars on shelf lines, labels banded with reviews and day counts.",
+      "case": "Reputation-as-maturation is a metaphor, not a grammar the audience reads; credits and prices have no jar.",
+      "kept": "A fixed data band on every item.",
+      "risk": "Cute where the brief wants minimal.",
+      "hero": "https://impeccable.style/worlds/cards/food-fermentation-culinary-theater-pickling-brine-calendar-hero.webp"
+    },
+    {
+      "id": "challenger-paper-menagerie",
+      "label": "Crank Paper Menagerie",
+      "verdict": "declined",
+      "lineage": "hand-cranked cut-paper automata",
+      "thesis": "A crank drives a procession where a seeker hands a credit to a specialist.",
+      "palette": ["#f6f1e7", "#c8a97e", "#2b2b2b", "#c0392b"],
+      "materials": ["cut white paper", "kraft board", "crimson fold"],
+      "viewport": "One figure per viewport, a crank line ruling the base.",
+      "case": "Whimsy reads playful, which the brief forbids; the linkage dramatizes the exchange but clarifies nothing about price.",
+      "kept": "One timeline driving every motion, reversible and inspectable.",
+      "risk": "Craft-fair charm on a job-market product.",
+      "hero": "https://impeccable.style/worlds/cards/kinetic-sculpture-automata-crank-paper-menagerie-hero.webp"
+    },
+    {
+      "id": "challenger-phosphor-terminal",
+      "label": "Phosphor Terminal Midnight",
+      "verdict": "declined",
+      "lineage": "green-phosphor machine-room terminal",
+      "thesis": "The landing typed out as one 80-column transcript.",
+      "palette": ["#050806", "#33ff66", "#1f8a45"],
+      "materials": ["curved glass", "scanline glow"],
+      "viewport": "A blinking cursor and a transcript that prints its own states.",
+      "case": "The late-night scene matches, but a monospace transcript is a developer idiom, and monospaced Hangul tables read badly.",
+      "kept": "States printed as content, never as chrome.",
+      "risk": "Excludes every non-developer seeker.",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-phosphor-terminal-midnight-hero.webp"
+    },
+    {
+      "id": "challenger-ascii-scene",
+      "label": "ASCII Live Scene",
+      "verdict": "declined",
+      "lineage": "typewriter-glyph luminance rendering",
+      "thesis": "The 선배 handshake rendered as glyph density.",
+      "palette": ["#000000", "#ffb000"],
+      "materials": ["monospace luminance ramp"],
+      "viewport": "A live glyph grid the camera moves through.",
+      "case": "A spectacle with no place for a table, a price, or a booking; nobody in the audience reads it as theirs.",
+      "kept": "One strict grid as the entire composition.",
+      "risk": "Demo trick, not a product surface.",
+      "hero": "https://impeccable.style/worlds/cards/medium-native-ascii-live-scene-render-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "steer": true,
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "The mentoring-platform landing: headline, search bar, mentor photo cards, three benefit cards, testimonials, executed impeccably.",
+    "palette": ["#ffffff", "#111827", "#2563eb"],
+    "materials": ["clean grid", "portrait photography"],
+    "viewport": "Headline and search over a row of mentor cards, three benefit cards, a testimonial band, a sign-up footer.",
+    "risk": "Indistinguishable from the competition by design, and it wants testimonials the product does not have.",
+    "comp": ".impeccable/mocks/decision/canon.webp"
+  },
+  "buildPath": { "value": "code", "toggle": false }
+}
