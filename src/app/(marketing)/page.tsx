@@ -62,7 +62,7 @@ export default async function LandingPage() {
               {t("landing.findSunbae")}
               <IconArrow size={18} />
             </Link>
-            <Link href="/login?next=/specialist/dashboard" className="btn btn-lg btn-outline-on-brand">
+            <Link href="/signup?role=expert" className="btn btn-lg btn-outline-on-brand">
               {t("landing.becomeSunbae")}
             </Link>
           </div>
@@ -186,7 +186,7 @@ export default async function LandingPage() {
             <div className="rounded-[16px] bg-brand p-7 text-white sm:p-9">
               <h3 className="text-[22px] font-bold tracking-[-0.015em]">{t("landing.closeSunbaeT")}</h3>
               <p className="mt-2 text-[15px] leading-relaxed text-white/80">{t("landing.closeSunbaeD")}</p>
-              <Link href="/login?next=/specialist/dashboard" className="btn btn-on-brand mt-6">
+              <Link href="/signup?role=expert" className="btn btn-on-brand mt-6">
                 {t("landing.becomeSunbae")}
                 <IconArrow size={18} />
               </Link>

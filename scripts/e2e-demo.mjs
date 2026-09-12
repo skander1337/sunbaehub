@@ -19,6 +19,25 @@ const mk = async (uid, locale) => {
   ]);
   return c.newPage();
 };
+// 0) real login form: wrong password is rejected, right password lands on the directory
+{
+  const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const p = await c.newPage();
+  await p.goto(`${base}/login`);
+  await p.fill('input[name="email"]', "jiwoo@korea.ac.kr");
+  await p.fill('input[name="password"]', "wrong-password");
+  await p.click('form button[type="submit"]');
+  await p.waitForURL(/\/login\?error=credentials/, { timeout: 15_000 });
+  await p.fill('input[name="email"]', "jiwoo@korea.ac.kr");
+  await p.fill('input[name="password"]', "hoobae1234");
+  await p.click('form button[type="submit"]');
+  await p.waitForURL(/\/specialists$/, { timeout: 15_000 });
+  const cookies = await c.cookies();
+  if (!cookies.some((k) => k.name === "sunbae_uid")) throw new Error("session cookie not set after login");
+  console.log("PASS login: wrong password rejected, correct password sets the session");
+  await c.close();
+}
+
 const a = await mk(jiwoo.id, "ko"); // seeker, Korean UI
 const b = await mk(seojun.id, "en"); // specialist, English UI
 const input = 'form input[maxlength="2000"]';

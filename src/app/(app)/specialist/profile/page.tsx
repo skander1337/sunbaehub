@@ -5,7 +5,7 @@ import { updateProfile } from "@/app/actions/specialist";
 import { FormError } from "@/components/FormError";
 import { Notice } from "@/components/Notice";
 
-export default async function EditProfilePage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
+export default async function EditProfilePage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string; welcome?: string }> }) {
   const sp = await searchParams;
   const [{ user, profile }, { t, locale }] = await Promise.all([requireSpecialist(), getT()]);
   const edu = [...profile.education, ...Array(4)].slice(0, 4);
@@ -15,6 +15,7 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
     <div className="mx-auto max-w-2xl">
       <h1 className="h1">{t("sp.profile.title")}</h1>
       <div className="mt-6">
+        {sp.welcome && <Notice tone="info">{t("signup.welcome")}</Notice>}
         {sp.saved && <Notice>{t("sp.profile.saved")}</Notice>}
         <FormError code={sp.error} />
       </div>

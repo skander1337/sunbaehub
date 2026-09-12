@@ -72,7 +72,6 @@ export async function Nav({ tone = "paper" }: { tone?: "paper" | "brand" }) {
                   {user.isSpecialist && <MenuLink href="/specialist/dashboard">{t("nav.dashboard")}</MenuLink>}
                   {user.isAdmin && <MenuLink href="/admin">{t("nav.admin")}</MenuLink>}
                   <div className="hairline my-1.5" />
-                  <MenuLink href="/login">{t("nav.switchUser")}</MenuLink>
                   <form action={logout}>
                     <button type="submit" className="block w-full rounded-[10px] px-3 py-2 text-left text-[14px] text-ink-2 hover:bg-mist">
                       {t("nav.logout")}

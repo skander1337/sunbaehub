@@ -17,7 +17,15 @@ Requires Node 20.9+ (built with Node 24). `npm run setup` is safe to re-run: it 
 
 ## Demo script (the golden path)
 
-Log in by clicking a card on `/login`. Use a normal window and an incognito window to be two people at once.
+Log in at `/login` with the demo credentials (also shown under the form). Use a normal window and an incognito window to be two people at once.
+
+| Role | Email | Password |
+|---|---|---|
+| 후배 (seeker) | jiwoo@korea.ac.kr | hoobae1234 |
+| 선배 (expert) | seojun@sunbae.demo | sunbae1234 |
+| 관리자 (admin) | admin@sunbae.demo | admin1234 |
+
+Every seeded seeker uses `hoobae1234` and every seeded specialist `sunbae1234`. Sign-up at `/signup` creates real accounts (scrypt-hashed passwords) for either role.
 
 1. **김지우** (seeker) → 선배 찾기 → **박서준**. His price reads *135 크레딧 · 기본가의 1.35배 · 리뷰 12개 · 평균 88점*: the multiplier and its reason. Pick a slot, book. Credits are held.
 2. 내 예약 → the live session with 박서준 → **입장하기**. In the incognito window log in as **박서준** → 선배 대시보드 → 입장하기. Chat in Korean from one side and English from the other; each message shows auto-translated with a *원문 보기* toggle. Try *통화* (a placeholder call with a timer). *세션 종료* ends it early.
@@ -32,7 +40,7 @@ Dev-only buttons in the session room (*데모: 지금 시작 / 지금 종료*) s
 
 | Real | Mocked for the demo |
 |---|---|
-| Data model, escrow ledger, dynamic pricing, cancellation rule, refund split | Authentication: pick a seeded user |
+| Data model, escrow ledger, dynamic pricing, cancellation rule, refund split, email + password auth (scrypt) | Sessions are a plain httpOnly cookie, no email verification |
 | Availability → 60-minute slots minus existing bookings, server-side double-booking check | Payments: top-up and withdrawal are simulated |
 | Session-window gating of chat (server enforced), lazy session lifecycle, 24h auto-settlement | Chat translation: a phrase-map stub behind a provider-agnostic `translate()`; unmatched text shows *번역 없음* |
 | Six explainable fraud rules, admin queues, verification, posts with per-click credits | Calls: a placeholder panel with a timer, no media |

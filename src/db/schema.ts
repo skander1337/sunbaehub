@@ -12,6 +12,7 @@ export const users = sqliteTable("users", {
   id: id(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  passwordHash: text("password_hash"), // scrypt "salt:hash"; null for system users
   isSeeker: integer("is_seeker", { mode: "boolean" }).notNull().default(true),
   isSpecialist: integer("is_specialist", { mode: "boolean" }).notNull().default(false),
   isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),

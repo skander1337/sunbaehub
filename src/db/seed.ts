@@ -9,6 +9,8 @@ import { priceFor, priceNote } from "@/lib/rules/pricing";
 import { normalSettlement } from "@/lib/rules/refund";
 import { fromSeoul, seoulDayKey, seoulParts } from "@/lib/seoul";
 import { DEMO_PHRASES, detectLang, translate } from "@/lib/translate";
+import { hashPassword } from "@/lib/password";
+import { DEMO_PASSWORDS } from "@/lib/demo";
 
 const MIN = 60_000;
 const HOUR = 3_600_000;
@@ -39,7 +41,7 @@ const platformId = uuid();
 db.insert(s.users).values({ id: platformId, name: "Sunbae Platform", email: "platform@sunbae.demo", isSeeker: false, isPlatform: true, createdAt: new Date(now.getTime() - 120 * DAY) }).run();
 
 const adminId = uuid();
-db.insert(s.users).values({ id: adminId, name: "관리자", email: "admin@sunbae.demo", isSeeker: false, isAdmin: true, createdAt: new Date(now.getTime() - 120 * DAY) }).run();
+db.insert(s.users).values({ id: adminId, name: "관리자", email: "admin@sunbae.demo", passwordHash: hashPassword(DEMO_PASSWORDS.admin), isSeeker: false, isAdmin: true, createdAt: new Date(now.getTime() - 120 * DAY) }).run();
 
 type SeekerSpec = { key: string; name: string; email: string; createdAgoDays: number; topup?: number };
 const seekerSpecs: SeekerSpec[] = [
@@ -53,7 +55,7 @@ const seekers: Record<string, string> = {};
 for (const sp of seekerSpecs) {
   const id = uuid();
   const createdAt = new Date(now.getTime() - sp.createdAgoDays * DAY);
-  db.insert(s.users).values({ id, name: sp.name, email: sp.email, createdAt }).run();
+  db.insert(s.users).values({ id, name: sp.name, email: sp.email, passwordHash: hashPassword(DEMO_PASSWORDS.seeker), createdAt }).run();
   postTx(db, { userId: id, type: "signup_grant", amount: 200, note: "가입 축하 크레딧", createdAt });
   if (sp.topup) postTx(db, { userId: id, type: "topup", amount: sp.topup, note: `크레딧 충전 (카카오페이)`, createdAt: new Date(createdAt.getTime() + HOUR) });
   seekers[sp.key] = id;
@@ -99,7 +101,7 @@ const tinyPdf = (title: string) =>
 for (const sp of specSpecs) {
   const id = uuid();
   const createdAt = new Date(now.getTime() - 90 * DAY);
-  db.insert(s.users).values({ id, name: sp.name, email: sp.email, isSpecialist: true, createdAt }).run();
+  db.insert(s.users).values({ id, name: sp.name, email: sp.email, passwordHash: hashPassword(DEMO_PASSWORDS.expert), isSpecialist: true, createdAt }).run();
   postTx(db, { userId: id, type: "signup_grant", amount: 200, note: "가입 축하 크레딧", createdAt });
   const resumePath = `uploads/${id}.pdf`;
   fs.writeFileSync(path.join(process.cwd(), resumePath), tinyPdf(sp.key));
