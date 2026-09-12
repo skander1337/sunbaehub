@@ -22,7 +22,7 @@ For the hackathon demo, the landing page's first visitors are judges, who may no
 
 ## Product Purpose
 
-Sunbae (선배) lets seekers book one-on-one, chat-based consultations with verified specialists and pay in platform credits instead of cash. Specialists earn credits per session, build a reviewed reputation, and can request payouts. Success for a seeker is leaving a session with something concrete to add to a resume or application. Success for a specialist is being paid and reviewed fairly.
+SunbaeHub (선배허브) lets seekers book one-on-one, chat-based consultations with verified specialists and pay in platform credits instead of cash. Specialists earn credits per session, build a reviewed reputation, and can request payouts. Success for a seeker is leaving a session with something concrete to add to a resume or application. Success for a specialist is being paid and reviewed fairly.
 
 ## Positioning
 
@@ -48,7 +48,7 @@ Terminology: seeker (도움을 구하는 사람), specialist / 선배 (전문가
 
 ## Brand Commitments
 
-- Name: Sunbae (선배). Korean for a senior or upperclassman.
+- Name: SunbaeHub (선배허브). 선배 is Korean for a senior or upperclassman; the product is the hub where you find one.
 - Minimalism is binding across the product. The landing page may carry orchestrated animation; app screens carry state-change motion only.
 - No gamified or playful tone: no confetti, mascots, badges raining down, cutesy copy.
 - No generic SaaS template look.

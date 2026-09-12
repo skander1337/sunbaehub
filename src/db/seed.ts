@@ -1,4 +1,4 @@
-/* Demo seed for Sunbae. Run with: npm run db:seed (tsx). Rebuilds the whole database. */
+/* Demo seed for SunbaeHub. Run with: npm run db:seed (tsx). Rebuilds the whole database. */
 import fs from "node:fs";
 import path from "node:path";
 import { db } from "./index";
@@ -38,10 +38,10 @@ type Rule = { dow: number[]; start: number; end: number };
 const H = (h: number) => h * 60;
 
 const platformId = uuid();
-db.insert(s.users).values({ id: platformId, name: "Sunbae Platform", email: "platform@sunbae.demo", isSeeker: false, isPlatform: true, createdAt: new Date(now.getTime() - 120 * DAY) }).run();
+db.insert(s.users).values({ id: platformId, name: "SunbaeHub Platform", email: "platform@sunbaehub.demo", isSeeker: false, isPlatform: true, createdAt: new Date(now.getTime() - 120 * DAY) }).run();
 
 const adminId = uuid();
-db.insert(s.users).values({ id: adminId, name: "관리자", email: "admin@sunbae.demo", passwordHash: hashPassword(DEMO_PASSWORDS.admin), isSeeker: false, isAdmin: true, createdAt: new Date(now.getTime() - 120 * DAY) }).run();
+db.insert(s.users).values({ id: adminId, name: "관리자", email: "admin@sunbaehub.demo", passwordHash: hashPassword(DEMO_PASSWORDS.admin), isSeeker: false, isAdmin: true, createdAt: new Date(now.getTime() - 120 * DAY) }).run();
 
 type SeekerSpec = { key: string; name: string; email: string; createdAgoDays: number; topup?: number };
 const seekerSpecs: SeekerSpec[] = [
@@ -66,28 +66,28 @@ type SpecSpec = {
   education: s.Education[]; experience: s.Experience[]; rules: Rule[]; verification: string; scores: number[];
 };
 const specSpecs: SpecSpec[] = [
-  { key: "seojun", name: "박서준", email: "seojun@sunbae.demo", headline: "삼성전자 인사팀 5년, 면접관 경험 3년", bio: "삼성전자 인사팀에서 신입 공채 면접관으로 3년간 참여했어요. 서류에서 무엇을 보는지, 면접에서 무엇을 묻는지 실제 기준으로 알려드려요.", categories: ["interview", "gongchae"], base: 100,
+  { key: "seojun", name: "박서준", email: "seojun@sunbaehub.demo", headline: "삼성전자 인사팀 5년, 면접관 경험 3년", bio: "삼성전자 인사팀에서 신입 공채 면접관으로 3년간 참여했어요. 서류에서 무엇을 보는지, 면접에서 무엇을 묻는지 실제 기준으로 알려드려요.", categories: ["interview", "gongchae"], base: 100,
     education: [{ school: "고려대학교", major: "경영학과", degree: "학사", years: "2014–2020" }], experience: [{ company: "삼성전자", title: "인사팀 채용 담당", years: "2020–현재" }],
     rules: [{ dow: [1, 2, 3, 4, 5], start: H(19), end: H(22) }, { dow: [0], start: H(14), end: H(17) }], verification: "verified", scores: [92, 85, 90, 88, 86, 91, 84, 89, 87, 90, 86, 88] },
-  { key: "haeun", name: "김하은", email: "haeun@sunbae.demo", headline: "네이버 백엔드 개발자, 코딩테스트 출제 경험", bio: "네이버 검색 플랫폼 백엔드를 4년째 개발하고 있어요. 코딩테스트 출제와 채점을 해봤고, 포트폴리오에서 무엇이 눈에 띄는지 알려드려요.", categories: ["portfolio", "coding_test"], base: 150,
+  { key: "haeun", name: "김하은", email: "haeun@sunbaehub.demo", headline: "네이버 백엔드 개발자, 코딩테스트 출제 경험", bio: "네이버 검색 플랫폼 백엔드를 4년째 개발하고 있어요. 코딩테스트 출제와 채점을 해봤고, 포트폴리오에서 무엇이 눈에 띄는지 알려드려요.", categories: ["portfolio", "coding_test"], base: 150,
     education: [{ school: "고려대학교", major: "컴퓨터학과", degree: "학사", years: "2015–2021" }], experience: [{ company: "네이버", title: "백엔드 개발자", years: "2021–현재" }],
     rules: [{ dow: [2, 4], start: H(20), end: H(23) }, { dow: [6], start: H(10), end: H(14) }, { dow: [0], start: H(10), end: H(12) }], verification: "verified", scores: [96, 93, 95, 92, 94, 94] },
-  { key: "doyun", name: "이도윤", email: "doyun@sunbae.demo", headline: "카카오 PM, 서비스 기획 이직 3회", bio: "제조업 → 스타트업 → 카카오로 이직하며 자소서와 포트폴리오를 수십 번 고쳤어요. 기획 직군 지원자의 서류를 봐드려요.", categories: ["resume", "career_change"], base: 120,
+  { key: "doyun", name: "이도윤", email: "doyun@sunbaehub.demo", headline: "카카오 PM, 서비스 기획 이직 3회", bio: "제조업 → 스타트업 → 카카오로 이직하며 자소서와 포트폴리오를 수십 번 고쳤어요. 기획 직군 지원자의 서류를 봐드려요.", categories: ["resume", "career_change"], base: 120,
     education: [{ school: "고려대학교", major: "산업경영공학부", degree: "학사", years: "2012–2018" }], experience: [{ company: "카카오", title: "프로덕트 매니저", years: "2022–현재" }, { company: "LG CNS", title: "서비스 기획", years: "2018–2020" }],
     rules: [{ dow: [1, 3, 5], start: H(18), end: H(21) }], verification: "verified", scores: [84, 78, 82, 80, 81] },
-  { key: "sua", name: "최수아", email: "sua@sunbae.demo", headline: "현대자동차 채용팀, 인적성 검사 운영", bio: "현대자동차 채용팀에서 공채 전형 운영과 인적성 검사를 담당하고 있어요. 전형 단계별로 무엇을 준비해야 하는지 알려드려요.", categories: ["gongchae", "aptitude"], base: 80,
+  { key: "sua", name: "최수아", email: "sua@sunbaehub.demo", headline: "현대자동차 채용팀, 인적성 검사 운영", bio: "현대자동차 채용팀에서 공채 전형 운영과 인적성 검사를 담당하고 있어요. 전형 단계별로 무엇을 준비해야 하는지 알려드려요.", categories: ["gongchae", "aptitude"], base: 80,
     education: [{ school: "고려대학교", major: "심리학과", degree: "학사", years: "2013–2019" }], experience: [{ company: "현대자동차", title: "채용팀", years: "2019–현재" }],
     rules: [{ dow: [6, 0], start: H(9), end: H(13) }, { dow: [3], start: H(20), end: H(22) }], verification: "verified", scores: [92, 88, 91, 89] },
-  { key: "minjae", name: "정민재", email: "minjae@sunbae.demo", headline: "토스 데이터 분석가, 통계학 석사", bio: "토스에서 데이터 분석을 하고 있어요. 분석 포트폴리오와 데이터 직군 이직을 도와드려요.", categories: ["portfolio", "career_change"], base: 130,
+  { key: "minjae", name: "정민재", email: "minjae@sunbaehub.demo", headline: "토스 데이터 분석가, 통계학 석사", bio: "토스에서 데이터 분석을 하고 있어요. 분석 포트폴리오와 데이터 직군 이직을 도와드려요.", categories: ["portfolio", "career_change"], base: 130,
     education: [{ school: "고려대학교", major: "통계학과", degree: "석사", years: "2016–2022" }], experience: [{ company: "토스", title: "데이터 분석가", years: "2022–현재" }],
     rules: [{ dow: [1, 2, 3, 4], start: H(21), end: H(23) }], verification: "verified", scores: [100, 100] },
-  { key: "yerin", name: "한예린", email: "yerin@sunbae.demo", headline: "쿠팡 마케팅, 前 LG전자", bio: "브랜드 마케팅 6년차예요. 마케팅 직군 자소서와 면접 답변을 함께 다듬어요.", categories: ["resume", "interview"], base: 90,
+  { key: "yerin", name: "한예린", email: "yerin@sunbaehub.demo", headline: "쿠팡 마케팅, 前 LG전자", bio: "브랜드 마케팅 6년차예요. 마케팅 직군 자소서와 면접 답변을 함께 다듬어요.", categories: ["resume", "interview"], base: 90,
     education: [{ school: "고려대학교", major: "미디어학부", degree: "학사", years: "2011–2017" }], experience: [{ company: "쿠팡", title: "브랜드 마케팅", years: "2021–현재" }, { company: "LG전자", title: "마케팅", years: "2017–2021" }],
     rules: [{ dow: [3, 5], start: H(19), end: H(22) }, { dow: [0], start: H(14), end: H(18) }], verification: "verified", scores: [80, 72, 76] },
-  { key: "taeyang", name: "오태양", email: "taeyang@sunbae.demo", headline: "스타트업 CTO, 개발자 채용 50회+", bio: "시리즈 B 스타트업 CTO예요. 개발자 채용을 50번 넘게 진행했어요. 이직과 포트폴리오를 봐드려요.", categories: ["career_change", "portfolio"], base: 200,
+  { key: "taeyang", name: "오태양", email: "taeyang@sunbaehub.demo", headline: "스타트업 CTO, 개발자 채용 50회+", bio: "시리즈 B 스타트업 CTO예요. 개발자 채용을 50번 넘게 진행했어요. 이직과 포트폴리오를 봐드려요.", categories: ["career_change", "portfolio"], base: 200,
     education: [{ school: "고려대학교", major: "전기전자공학부", degree: "학사", years: "2009–2015" }], experience: [{ company: "스타트업 (시리즈 B)", title: "CTO", years: "2020–현재" }],
     rules: [{ dow: [6], start: H(10), end: H(16) }], verification: "verified", scores: [] },
-  { key: "seoyeon", name: "윤서연", email: "seoyeon@sunbae.demo", headline: "삼성SDS 컨설턴트 3년", bio: "IT 컨설팅 직군 취업 준비를 도와드려요. 인적성과 공채 전형 경험을 나눠요.", categories: ["aptitude", "gongchae"], base: 70,
+  { key: "seoyeon", name: "윤서연", email: "seoyeon@sunbaehub.demo", headline: "삼성SDS 컨설턴트 3년", bio: "IT 컨설팅 직군 취업 준비를 도와드려요. 인적성과 공채 전형 경험을 나눠요.", categories: ["aptitude", "gongchae"], base: 70,
     education: [{ school: "고려대학교", major: "경제학과", degree: "학사", years: "2016–2022" }], experience: [{ company: "삼성SDS", title: "컨설턴트", years: "2023–현재" }],
     rules: [{ dow: [1, 2, 3, 4, 5], start: H(12), end: H(13) }, { dow: [1, 2, 3, 4, 5], start: H(20), end: H(22) }], verification: "pending", scores: [] },
 ];

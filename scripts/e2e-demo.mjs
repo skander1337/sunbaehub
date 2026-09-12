@@ -6,7 +6,7 @@ import Database from "better-sqlite3";
 const base = process.env.BASE_URL ?? "http://localhost:3000";
 const db = new Database("dev.db", { readonly: true });
 const jiwoo = db.prepare("select id, credit_balance as bal from users where email='jiwoo@korea.ac.kr'").get();
-const seojun = db.prepare("select id from users where email='seojun@sunbae.demo'").get();
+const seojun = db.prepare("select id from users where email='seojun@sunbaehub.demo'").get();
 const input = 'form input[maxlength="2000"]';
 const send = 'form:has(input[maxlength="2000"]) button[type="submit"]';
 const bookingForm = 'form:has(input[name="specialistId"])';
@@ -38,7 +38,7 @@ const mk = async (email, password, locale) => {
 }
 
 const a = await mk("jiwoo@korea.ac.kr", "hoobae1234", "ko"); // seeker, Korean UI
-const b = await mk("seojun@sunbae.demo", "sunbae1234", "en"); // specialist, English UI
+const b = await mk("seojun@sunbaehub.demo", "sunbae1234", "en"); // specialist, English UI
 
 // 1) book a session with a cover letter attached
 await a.goto(`${base}/specialists/${seojun.id}`);

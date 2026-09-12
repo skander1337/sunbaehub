@@ -1,8 +1,8 @@
 export const BRAND = {
-  name: "Sunbae",
-  nameKo: "선배",
+  name: "SunbaeHub",
+  nameKo: "선배허브",
   /** Shown wherever the product name appears in full. */
-  full: "Sunbae · 선배",
+  full: "SunbaeHub · 선배허브",
   creditsToWon: 100, // 1 credit ≈ ₩100 (display only)
   platformFeeRate: 0.05,
   slotMinutes: 60,

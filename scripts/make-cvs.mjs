@@ -103,7 +103,7 @@ const html = (c) => `<!doctype html><html lang="ko"><head><meta charset="utf-8">
   ${c.education.map((e) => `<div class="row"><div><b>${esc(e.school)}</b> <span class="sub">· ${esc(e.major)}</span>${e.note ? `<div class="sub" style="font-size:9.5pt">${esc(e.note)}</div>` : ""}</div><div class="years">${esc(e.years)}</div></div>`).join("")}
   <h2>Skills</h2><div class="chips">${c.skills.map((s) => `<span>${esc(s)}</span>`).join("")}</div>
   <h2>Certifications & Others</h2><ul>${c.extras.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
-  <div class="foot">이 이력서는 선배 Sunbae 데모용으로 생성된 가상의 문서입니다. 실존 인물과 관련이 없습니다.</div>
+  <div class="foot">이 이력서는 선배허브 SunbaeHub 데모용으로 생성된 가상의 문서입니다. 실존 인물과 관련이 없습니다.</div>
 </body></html>`;
 
 mkdirSync("seed-assets/cv", { recursive: true });

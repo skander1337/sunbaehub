@@ -1,13 +1,13 @@
-# 선배 Sunbae
+# 선배허브 SunbaeHub
 
-**Book an hour of 1:1 consultation with a verified senior, pay in credits.** Sunbae (선배, "senior") is a two-sided consultation marketplace for Korean students and fresh graduates: seekers book one-on-one sessions with specialists, pay in platform credits, and leave a review out of 100. Reviews set the specialist's price, dissatisfied seekers get half back after a human review, and review trading is flagged automatically.
+**Book an hour of 1:1 consultation with a verified senior, pay in credits.** SunbaeHub (선배허브; 선배 means "senior") is a two-sided consultation marketplace for Korean students and fresh graduates: seekers book one-on-one sessions with specialists, pay in platform credits, and leave a review out of 100. Reviews set the specialist's price, dissatisfied seekers get half back after a human review, and review trading is flagged automatically.
 
 Hackathon MVP. Korean first, English toggle. Runs locally on SQLite; nothing external.
 
 ## Run it
 
 ```bash
-git clone <this repo> && cd hackathon
+git clone <this repo> && cd sunbaehub
 npm install
 npm run setup     # creates dev.db and seeds the demo data
 npm run dev       # http://localhost:3000
@@ -22,8 +22,8 @@ Log in at `/login` with the demo credentials below (they are not shown anywhere 
 | Role | Email | Password |
 |---|---|---|
 | 후배 (seeker) | jiwoo@korea.ac.kr | hoobae1234 |
-| 선배 (expert) | seojun@sunbae.demo | sunbae1234 |
-| 관리자 (admin) | admin@sunbae.demo | admin1234 |
+| 선배 (expert) | seojun@sunbaehub.demo | sunbae1234 |
+| 관리자 (admin) | admin@sunbaehub.demo | admin1234 |
 
 Every seeded seeker uses `hoobae1234` and every seeded specialist `sunbae1234`. Sign-up at `/signup` creates real accounts (scrypt-hashed passwords) for either role.
 
