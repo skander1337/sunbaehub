@@ -27,7 +27,7 @@ Log in at `/login` with the demo credentials below (they are not shown anywhere 
 
 Every seeded seeker uses `hoobae1234` and every seeded specialist `sunbae1234`.
 
-**Sign-up** at `/signup` creates real accounts for either role. A seeker is live immediately (optional affiliation, 200 welcome credits). A 선배 goes through onboarding: account → profile with education, experience, topics, base rate and a required CV (PDF) → *심사 요청* → the admin queue at `/admin/verifications`. Until approved the profile is hidden from the directory, the leaderboard and the landing page, and cannot be booked; a rejection carries the admin's note and can be resubmitted after editing.
+**Sign-up** at `/signup` creates real accounts for either role. A seeker is live immediately (optional affiliation, 70 welcome credits: enough for one 30-minute session with most specialists). A 선배 goes through onboarding: account → profile with education, experience, topics, base rate and a required CV (PDF) → *심사 요청* → the admin queue at `/admin/verifications`, where the team sets the specialist's base rate (credits per 60 minutes) on approval; rates can be changed later under 선배 요금. Until approved the profile is hidden from the directory, the leaderboard and the landing page, and cannot be booked; a rejection carries the admin's note and can be resubmitted after editing.
 
 1. **김지우** (seeker) → 선배 찾기 → **박서준**. His price reads *135 크레딧 · 기본가의 1.35배 · 리뷰 12개 · 평균 88점*: the multiplier and its reason. Pick a slot, book. Credits are held.
 2. 내 예약 → the live session with 박서준 → **입장하기**. In the incognito window log in as **박서준** → 선배 대시보드 → 입장하기. Messages arrive instantly over server-sent events with a typing indicator. Chat in Korean from one side and English from the other; each message shows auto-translated with a *원문 보기* toggle. Attach a PDF or image with the paperclip, or at booking time (the 자소서 shows in the room before the session starts). Try *통화* (a placeholder call with a timer). *세션 종료* ends it early.
@@ -59,7 +59,7 @@ Seed data is synthetic and labeled as demo. Korea University is used as the exam
 | Cancel > 24h before | seeker +100 |
 | Cancel ≤ 24h before | 45 / 50 / 5 split, no admin needed |
 
-Price = base × min(1 + 0.01·min(reviews, 20) + 0.35·clamp((avg − 65)/35, 0, 1), 1.5), from visible reviews only, rounded to 5.
+60-minute price = base × min(1 + 0.01·min(reviews, 20) + 0.35·clamp((avg − 65)/35, 0, 1), 1.5), from visible reviews only, rounded to 5, never below the platform floor of 50 credits. The base is set by admins; specialists only propose a rate. A 30-minute session costs half the 60-minute price. Sessions are 30 or 60 minutes, start times every 30 minutes within the specialist's availability.
 
 ## Stack
 
