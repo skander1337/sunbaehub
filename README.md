@@ -28,7 +28,7 @@ Log in at `/login` with the demo credentials below (they are not shown anywhere 
 Every seeded seeker uses `hoobae1234` and every seeded specialist `sunbae1234`. Sign-up at `/signup` creates real accounts (scrypt-hashed passwords) for either role.
 
 1. **김지우** (seeker) → 선배 찾기 → **박서준**. His price reads *135 크레딧 · 기본가의 1.35배 · 리뷰 12개 · 평균 88점*: the multiplier and its reason. Pick a slot, book. Credits are held.
-2. 내 예약 → the live session with 박서준 → **입장하기**. In the incognito window log in as **박서준** → 선배 대시보드 → 입장하기. Chat in Korean from one side and English from the other; each message shows auto-translated with a *원문 보기* toggle. Try *통화* (a placeholder call with a timer). *세션 종료* ends it early.
+2. 내 예약 → the live session with 박서준 → **입장하기**. In the incognito window log in as **박서준** → 선배 대시보드 → 입장하기. Messages arrive instantly over server-sent events with a typing indicator. Chat in Korean from one side and English from the other; each message shows auto-translated with a *원문 보기* toggle. Attach a PDF or image with the paperclip, or at booking time (the 자소서 shows in the room before the session starts). Try *통화* (a placeholder call with a timer). *세션 종료* ends it early.
 3. 김지우 leaves a review (0–100). Settlement happens on review: 박서준 gets 95%, the platform 5%. His review count ticks to 13 and the price note updates.
 4. **리더보드**: only specialists with 3+ visible reviews are ranked, by a Bayesian score.
 5. **관리자** → 리뷰 검토: seven flagged reviews from three rules (reciprocal reviews, a high-score burst, a new account). Confirm one to hide it and strike both users; dismiss another to restore it. → 환불 요청: approve 이서윤's dispute and watch three ledgers split 45 / 50 / 5. → 인증 요청: approve 윤서연 so she can post.
@@ -42,8 +42,8 @@ Dev-only buttons in the session room (*데모: 지금 시작 / 지금 종료*) s
 |---|---|
 | Data model, escrow ledger, dynamic pricing, cancellation rule, refund split, email + password auth (scrypt), DB-backed sessions with hashed tokens, login rate limiting, security headers | No email verification or password reset (no mail infrastructure) |
 | Availability → 60-minute slots minus existing bookings, server-side double-booking check | Payments: top-up and withdrawal are simulated |
-| Session-window gating of chat (server enforced), lazy session lifecycle, 24h auto-settlement | Chat translation: a phrase-map stub behind a provider-agnostic `translate()`; unmatched text shows *번역 없음* |
-| Six explainable fraud rules, admin queues, verification, posts with per-click credits | Calls: a placeholder panel with a timer, no media |
+| Live chat over server-sent events with typing indicators and a polling fallback; file attachments (PDF/PNG/JPG, 10MB) scoped to participants; session-window gating (server enforced); lazy session lifecycle; 24h auto-settlement | Chat translation: a phrase-map stub behind a provider-agnostic `translate()`; unmatched text shows *번역 없음* |
+| Six explainable fraud rules, admin queues, verification (requires an uploaded CV), posts with per-click credits, generated one-page CVs for every seeded specialist (`npm run make:cvs`) | Calls: a placeholder panel with a timer, no media |
 
 Seed data is synthetic and labeled as demo. Korea University is used as the example community; no affiliation is claimed.
 
@@ -70,5 +70,7 @@ src/lib/services ledger, booking, review, dispute, settlement, post, admin (all 
 src/db           Drizzle schema, client, seed
 src/lib/i18n     ko/en dictionary, locale cookie
 ```
+
+Checks: `npm run e2e` drives two real browsers through login, booking with an attachment, live chat with translation, and file sharing (dev server required). `node scripts/mobile-check.mjs <specialistId>` reports any route wider than a 390px viewport.
 
 Design context lives in `PRODUCT.md` and `DESIGN.md` (Impeccable).
