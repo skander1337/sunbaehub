@@ -19,6 +19,8 @@ export type HeroScreenProps = {
   won: number;
   price30: number;
   slots: { label: string; sub: string }[];
+  /** A real visible review of this sunbae, shown as one quiet line under the rating. */
+  review?: { score: number; body: string } | null;
 };
 
 const easeOut = (x: number) => 1 - Math.pow(1 - x, 3);
@@ -30,13 +32,17 @@ export function HeroScreen(p: HeroScreenProps) {
 
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const raf1 = requestAnimationFrame(() => {
-      setRisen(true);
-      if (reducedMotion) setK(1);
-    });
-    if (reducedMotion) return () => cancelAnimationFrame(raf1);
+    // The headline leads (its lines rise over the first 900ms); the screen follows through the field's edge.
+    const rise = window.setTimeout(() => setRisen(true), reducedMotion ? 0 : 260);
+    if (reducedMotion) {
+      const land = window.setTimeout(() => setK(1), 0);
+      return () => {
+        window.clearTimeout(rise);
+        window.clearTimeout(land);
+      };
+    }
     let raf = 0;
-    const t0 = performance.now() + 350;
+    const t0 = performance.now() + 700;
     const dur = 1400;
     const tick = (now: number) => {
       const x = Math.min(1, Math.max(0, (now - t0) / dur));
@@ -45,9 +51,9 @@ export function HeroScreen(p: HeroScreenProps) {
     };
     raf = requestAnimationFrame(tick);
     // Hard fallback: whatever happens to rAF (background tab, throttling, virtual time), land on the final numbers.
-    const settle = window.setTimeout(() => setK(1), 2400);
+    const settle = window.setTimeout(() => setK(1), 2800);
     return () => {
-      cancelAnimationFrame(raf1);
+      window.clearTimeout(rise);
       cancelAnimationFrame(raf);
       window.clearTimeout(settle);
     };
@@ -86,6 +92,12 @@ export function HeroScreen(p: HeroScreenProps) {
               <span className="text-ink-3">/100 · </span>
               {t("landing.reviewsN", { n: reviews })}
             </p>
+            {p.review && (
+              <p className="mt-2 flex max-w-[44ch] items-baseline gap-2 text-[13px]">
+                <span className="tag tag-neutral tnum shrink-0">{t("landing.reviewTag", { n: p.review.score })}</span>
+                <span className="line-clamp-1 text-ink-2">{p.review.body}</span>
+              </p>
+            )}
           </div>
         </div>
         <div className="sm:text-right">

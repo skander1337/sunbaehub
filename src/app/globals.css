@@ -160,6 +160,154 @@ a {
       animation-timeline: view();
       animation-range: entry 0% entry 35%;
     }
+    /* A list arrives as a list: each child owns a view timeline, offset 4% of the viewport per sibling, eight deep. */
+    .reveal-list > * {
+      animation: reveal-up cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 22%;
+    }
+    .reveal-list > :nth-child(2) {
+      animation-range: cover 4% cover 26%;
+    }
+    .reveal-list > :nth-child(3) {
+      animation-range: cover 8% cover 30%;
+    }
+    .reveal-list > :nth-child(4) {
+      animation-range: cover 12% cover 34%;
+    }
+    .reveal-list > :nth-child(5) {
+      animation-range: cover 16% cover 38%;
+    }
+    .reveal-list > :nth-child(6) {
+      animation-range: cover 20% cover 42%;
+    }
+    .reveal-list > :nth-child(7) {
+      animation-range: cover 24% cover 46%;
+    }
+    .reveal-list > :nth-child(n + 8) {
+      animation-range: cover 28% cover 50%;
+    }
+  }
+}
+
+/* Landing opening: the field is there at once; the headline lines rise out of a mask, the rest follows in order. */
+@keyframes hero-line {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.hero-line {
+  display: block;
+  animation: hero-line 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.hero-mask + .hero-mask .hero-line {
+  animation-delay: 90ms;
+}
+.hero-in {
+  animation: hero-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* Stacking cards: each section pins at the top and recedes under the next. `--deck-p` and `top` come from <Deck>. */
+.deck {
+  position: relative;
+}
+.deck-card {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100lvh;
+  background: var(--color-paper);
+  isolation: isolate;
+  transform-origin: 50% 0;
+}
+.deck-card.is-covered {
+  transform: scale(calc(1 - 0.04 * var(--deck-p, 0)));
+  will-change: transform;
+}
+/* Fully covered cards leave the tab order and the paint; they return as soon as the visitor scrolls back. */
+.deck-card.is-hidden {
+  visibility: hidden;
+}
+.deck-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: var(--color-ink);
+  opacity: calc(0.16 * var(--deck-p, 0));
+}
+.deck-card.is-covered::after {
+  will-change: opacity;
+}
+.deck-card + .deck-card {
+  border-top: 1px solid var(--color-line);
+  border-radius: 16px 16px 0 0;
+}
+/* Inside a card, reveals follow the card's entry (--deck-enter, 0 → 1 as it travels up the viewport), so they are
+   complete before the card pins; a pinned element's own view timeline would freeze mid-reveal. Default 1 = visible. */
+.deck-card .reveal,
+.deck-card .reveal-list > * {
+  --rv: clamp(0, (var(--deck-enter, 1) - var(--rv-start, 0.15)) / 0.35, 1);
+  animation: none;
+  opacity: var(--rv);
+  transform: translateY(calc((1 - var(--rv)) * 18px));
+}
+.deck-card .reveal-list > :nth-child(2) {
+  --rv-start: 0.21;
+}
+.deck-card .reveal-list > :nth-child(3) {
+  --rv-start: 0.27;
+}
+.deck-card .reveal-list > :nth-child(4) {
+  --rv-start: 0.33;
+}
+.deck-card .reveal-list > :nth-child(5) {
+  --rv-start: 0.39;
+}
+.deck-card .reveal-list > :nth-child(6) {
+  --rv-start: 0.45;
+}
+.deck-card .reveal-list > :nth-child(7) {
+  --rv-start: 0.51;
+}
+.deck-card .reveal-list > :nth-child(n + 8) {
+  --rv-start: 0.57;
+}
+.deck-card.deck-card--brand {
+  background: var(--color-brand);
+  border-top: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .deck-card,
+  .deck-card.is-covered {
+    position: static;
+    transform: none;
+    min-height: 0;
+  }
+  .deck-card::after {
+    display: none;
   }
 }
 
