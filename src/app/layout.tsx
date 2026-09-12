@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { settleDueBookings } from "@/lib/services/settlement";
 
 export const metadata: Metadata = {
-  title: `${BRAND.nameKo} ${BRAND.name} · 선배에게 1시간, 크레딧으로`,
+  title: `${BRAND.nameKo} ${BRAND.name} · 선배와 1:1 상담, 크레딧으로`,
   description: "취업 준비생이 검증된 선배와 1:1 상담을 크레딧으로 예약하는 플랫폼. 리뷰가 가격을 정하고, 불만족 시 50%를 돌려드려요.",
 };
 

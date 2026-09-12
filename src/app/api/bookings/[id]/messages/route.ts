@@ -1,21 +1,13 @@
-import { and, asc, eq, gt } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { currentUser } from "@/lib/auth";
 import { db, schema } from "@/lib/db";
 import { chatBlockReason, isParticipant } from "@/lib/rules/session";
 import { touchSession } from "@/lib/services/booking";
+import { loadMessages, serializeMessage } from "@/lib/services/chat";
+import { publish } from "@/lib/realtime";
 import { detectLang, translate } from "@/lib/translate";
 
 export const dynamic = "force-dynamic";
-
-const serialize = (m: typeof schema.messages.$inferSelect) => ({
-  id: m.id,
-  senderId: m.senderId,
-  kind: m.kind,
-  body: m.body,
-  lang: m.lang,
-  translatedBody: m.translatedBody,
-  createdAt: m.createdAt.toISOString(),
-});
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
@@ -24,16 +16,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const booking = db.select().from(schema.bookings).where(eq(schema.bookings.id, id)).get();
   if (!booking || !isParticipant(booking, user.id)) return Response.json({ error: "not_participant" }, { status: 403 });
   const after = new URL(req.url).searchParams.get("after");
-  let rows;
+  let all = loadMessages(db, id);
   if (after) {
-    const last = db.select({ createdAt: schema.messages.createdAt }).from(schema.messages).where(eq(schema.messages.id, after)).get();
-    rows = last
-      ? db.select().from(schema.messages).where(and(eq(schema.messages.bookingId, id), gt(schema.messages.createdAt, last.createdAt))).orderBy(asc(schema.messages.createdAt)).all()
-      : [];
-  } else {
-    rows = db.select().from(schema.messages).where(eq(schema.messages.bookingId, id)).orderBy(asc(schema.messages.createdAt)).all();
+    const idx = all.findIndex((m) => m.id === after);
+    all = idx >= 0 ? all.slice(idx + 1) : all;
   }
-  return Response.json({ status: booking.status, endAt: booking.endAt.toISOString(), messages: rows.map(serialize) });
+  return Response.json({ status: booking.status, endAt: booking.endAt.toISOString(), messages: all });
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -59,5 +47,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .run();
     return tx.select().from(schema.messages).where(eq(schema.messages.id, mid)).get()!;
   });
-  return Response.json({ message: serialize(row) });
+  const wire = serializeMessage(row, null);
+  publish(id, "message", wire);
+  return Response.json({ message: wire });
 }

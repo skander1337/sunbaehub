@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { asc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
@@ -9,7 +9,8 @@ import { fmtDateTime, fmtTime } from "@/lib/seoul";
 import { canChat, isParticipant, sessionWindow } from "@/lib/rules/session";
 import { touchSession } from "@/lib/services/booking";
 import { devShiftBooking, endSession } from "@/app/actions/booking";
-import { SessionRoom, type ChatMessage } from "@/components/session/SessionRoom";
+import { SessionRoom } from "@/components/session/SessionRoom";
+import { loadMessages } from "@/lib/services/chat";
 import { StatusTag } from "@/components/StatusTag";
 import { FormError } from "@/components/FormError";
 
@@ -23,22 +24,13 @@ export default async function SessionPage({ params, searchParams }: { params: Pr
 
   const otherId = booking.seekerId === user.id ? booking.specialistId : booking.seekerId;
   const other = db.select().from(schema.users).where(eq(schema.users.id, otherId)).get()!;
-  const messages = db.select().from(schema.messages).where(eq(schema.messages.bookingId, id)).orderBy(asc(schema.messages.createdAt)).all();
+  const serialized = loadMessages(db, id);
   const review = db.select().from(schema.reviews).where(eq(schema.reviews.bookingId, id)).get();
   const live = booking.status === "confirmed" || booking.status === "in_progress";
   const phase: "early" | "open" | "closed" = live ? sessionWindow(booking, now) : "closed";
   const isSeeker = booking.seekerId === user.id;
   const dev = process.env.NODE_ENV !== "production";
 
-  const serialized: ChatMessage[] = messages.map((m) => ({
-    id: m.id,
-    senderId: m.senderId,
-    kind: m.kind,
-    body: m.body,
-    lang: m.lang,
-    translatedBody: m.translatedBody,
-    createdAt: m.createdAt.toISOString(),
-  }));
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -86,6 +78,7 @@ export default async function SessionPage({ params, searchParams }: { params: Pr
         otherInitial={other.name.slice(0, 1)}
         initialMessages={serialized}
         canSend={canChat(booking, user.id, now)}
+        uploadAllowed={live}
         phase={phase}
         startAt={booking.startAt.toISOString()}
         endAt={booking.endAt.toISOString()}

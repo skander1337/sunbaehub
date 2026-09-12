@@ -104,7 +104,9 @@ for (const sp of specSpecs) {
   db.insert(s.users).values({ id, name: sp.name, email: sp.email, passwordHash: hashPassword(DEMO_PASSWORDS.expert), isSpecialist: true, createdAt }).run();
   postTx(db, { userId: id, type: "signup_grant", amount: 200, note: "가입 축하 크레딧", createdAt });
   const resumePath = `uploads/${id}.pdf`;
-  fs.writeFileSync(path.join(process.cwd(), resumePath), tinyPdf(sp.key));
+  const cv = path.join(process.cwd(), "seed-assets", "cv", `${sp.key}.pdf`);
+  if (fs.existsSync(cv)) fs.copyFileSync(cv, path.join(process.cwd(), resumePath));
+  else fs.writeFileSync(path.join(process.cwd(), resumePath), tinyPdf(sp.key));
   db.insert(s.specialistProfiles).values({
     userId: id, headline: sp.headline, bio: sp.bio, categories: sp.categories, basePrice: sp.base,
     education: sp.education, experience: sp.experience, resumePath, verification: sp.verification,

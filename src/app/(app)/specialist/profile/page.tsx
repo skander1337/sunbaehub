@@ -16,6 +16,7 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
       <h1 className="h1">{t("sp.profile.title")}</h1>
       <div className="mt-6">
         {sp.welcome && <Notice tone="info">{t("signup.welcome")}</Notice>}
+        {!profile.resumePath && <Notice tone="info">{t("sp.profile.resumeRequired")}</Notice>}
         {sp.saved && <Notice>{t("sp.profile.saved")}</Notice>}
         <FormError code={sp.error} />
       </div>
@@ -80,7 +81,7 @@ export default async function EditProfilePage({ searchParams }: { searchParams: 
           <h2 className="h3">{t("sp.profile.resume")}</h2>
           <p className="mt-1 text-[13px] text-ink-3">{t("sp.profile.resumeHint")}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <input type="file" name="resume" accept="application/pdf" className="text-[14px] file:mr-3 file:rounded-[10px] file:border-0 file:bg-mist file:px-3.5 file:py-2 file:text-[13.5px] file:font-semibold file:text-ink hover:file:bg-brand-tint" />
+            <input type="file" name="resume" accept="application/pdf" required={!profile.resumePath} className="text-[14px] file:mr-3 file:rounded-[10px] file:border-0 file:bg-mist file:px-3.5 file:py-2 file:text-[13.5px] file:font-semibold file:text-ink hover:file:bg-brand-tint" />
             {profile.resumePath && (
               <a href={`/api/files/resume/${user.id}`} target="_blank" rel="noreferrer" className="text-[13.5px] font-semibold text-brand underline">
                 {t("sp.profile.resumeCurrent")}

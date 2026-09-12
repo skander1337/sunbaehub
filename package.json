@@ -11,7 +11,8 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:studio": "drizzle-kit studio",
     "setup": "npm run db:push && npm run db:seed",
-    "e2e": "node scripts/e2e-demo.mjs"
+    "e2e": "node scripts/e2e-demo.mjs",
+    "make:cvs": "node scripts/make-cvs.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

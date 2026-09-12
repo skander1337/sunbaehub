@@ -115,6 +115,20 @@ export function SlotPicker(props: {
         <textarea id="note" name="note" className="textarea" placeholder={t("profile.notePh")} maxLength={500} />
       </div>
 
+      <div>
+        <label htmlFor="attachment" className="mb-2 block text-[13px] font-semibold text-ink-3">
+          {t("profile.attachment")}
+        </label>
+        <input
+          id="attachment"
+          name="attachment"
+          type="file"
+          accept="application/pdf,image/png,image/jpeg"
+          className="block w-full text-[13.5px] text-ink-2 file:mr-3 file:rounded-[10px] file:border-0 file:bg-mist file:px-3.5 file:py-2 file:text-[13px] file:font-semibold file:text-ink hover:file:bg-brand-tint"
+        />
+        <p className="mt-1.5 text-[12px] text-ink-3">{t("profile.attachmentHint")}</p>
+      </div>
+
       <div className="hairline pt-5">
         <div className="flex items-center justify-between text-[14px]">
           <span className="muted">{t("profile.priceTitle")}</span>

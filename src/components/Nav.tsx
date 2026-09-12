@@ -5,6 +5,7 @@ import { db, schema } from "@/lib/db";
 import { getT } from "@/lib/i18n/server";
 import { BRAND } from "@/lib/brand";
 import { LocaleToggle } from "./LocaleToggle";
+import { MobileMenu } from "./MobileMenu";
 import { IconBell } from "./icons";
 import { logout } from "@/app/actions/auth";
 
@@ -24,7 +25,7 @@ export async function Nav({ tone = "paper" }: { tone?: "paper" | "brand" }) {
   const link = `text-[14px] font-medium transition-colors duration-200 ${onBrand ? "text-white/80 hover:text-white" : "text-ink-2 hover:text-ink"}`;
 
   return (
-    <header className={onBrand ? "text-white" : "border-b border-line bg-paper"}>
+    <header className={`relative ${onBrand ? "text-white" : "border-b border-line bg-paper"}`}>
       <div className="container-x flex h-16 items-center justify-between gap-6">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-baseline gap-1.5" aria-label={BRAND.full}>
@@ -64,7 +65,7 @@ export async function Nav({ tone = "paper" }: { tone?: "paper" | "brand" }) {
                   <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${onBrand ? "bg-white text-brand" : "bg-brand-tint text-brand"}`}>
                     {user.name.slice(0, 1)}
                   </span>
-                  {user.name}
+                  <span className="hidden sm:inline">{user.name}</span>
                 </summary>
                 <div className="card absolute right-0 z-20 mt-2 w-52 p-1.5 text-ink shadow-raise">
                   <MenuLink href="/me/bookings">{t("nav.bookings")}</MenuLink>
@@ -81,10 +82,27 @@ export async function Nav({ tone = "paper" }: { tone?: "paper" | "brand" }) {
               </details>
             </>
           ) : (
-            <Link href="/login" className={`btn btn-sm ${onBrand ? "btn-on-brand" : "btn-primary"}`}>
+            <Link href="/login" className={`btn btn-sm hidden sm:inline-flex ${onBrand ? "btn-on-brand" : "btn-primary"}`}>
               {t("nav.login")}
             </Link>
           )}
+          <MobileMenu
+            tone={tone}
+            loggedIn={!!user}
+            primary={[
+              { href: "/specialists", label: t("nav.specialists") },
+              { href: "/leaderboard", label: t("nav.leaderboard") },
+              { href: "/posts", label: t("nav.posts") },
+            ]}
+            account={[
+              { href: "/me/bookings", label: t("nav.bookings") },
+              { href: "/me/credits", label: t("nav.credits") },
+              { href: "/me/notifications", label: t("nav.notifications") },
+              ...(user?.isSpecialist ? [{ href: "/specialist/dashboard", label: t("nav.dashboard") }] : []),
+              ...(user?.isAdmin ? [{ href: "/admin", label: t("nav.admin") }] : []),
+            ]}
+            labels={{ menu: t("nav.menu"), login: t("nav.login"), signup: t("nav.signup"), logout: t("nav.logout") }}
+          />
         </div>
       </div>
     </header>

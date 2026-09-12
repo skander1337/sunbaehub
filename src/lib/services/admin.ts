@@ -5,7 +5,7 @@ import { postTx } from "./ledger";
 
 export function requestVerification(tx: Tx | Db, userId: string, now: Date): void {
   const p = tx.select().from(specialistProfiles).where(eq(specialistProfiles.userId, userId)).get();
-  if (!p || p.verification === "verified" || p.verification === "pending") return;
+  if (!p || !p.resumePath || p.verification === "verified" || p.verification === "pending") return;
   tx.update(specialistProfiles).set({ verification: "pending" }).where(eq(specialistProfiles.userId, userId)).run();
   void now;
 }

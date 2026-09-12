@@ -33,6 +33,8 @@ export async function updateProfile(formData: FormData) {
   const patch: Partial<typeof schema.specialistProfiles.$inferInsert> = { headline, bio, basePrice, categories, education, experience };
 
   const file = formData.get("resume");
+  const existing = db.select({ resumePath: schema.specialistProfiles.resumePath }).from(schema.specialistProfiles).where(eq(schema.specialistProfiles.userId, user.id)).get();
+  if (!existing?.resumePath && !(file instanceof File && file.size > 0)) redirect("/specialist/profile?error=resume_required");
   if (file instanceof File && file.size > 0) {
     if (file.type !== "application/pdf" || file.size > 8 * 1024 * 1024) redirect("/specialist/profile?error=file");
     const dir = path.join(process.cwd(), "uploads");

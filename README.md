@@ -1,6 +1,6 @@
 # 선배 Sunbae
 
-**Book an hour with a verified senior, pay in credits.** Sunbae (선배, "senior") is a two-sided consultation marketplace for Korean students and fresh graduates: seekers book one-on-one sessions with specialists, pay in platform credits, and leave a review out of 100. Reviews set the specialist's price, dissatisfied seekers get half back after a human review, and review trading is flagged automatically.
+**Book an hour of 1:1 consultation with a verified senior, pay in credits.** Sunbae (선배, "senior") is a two-sided consultation marketplace for Korean students and fresh graduates: seekers book one-on-one sessions with specialists, pay in platform credits, and leave a review out of 100. Reviews set the specialist's price, dissatisfied seekers get half back after a human review, and review trading is flagged automatically.
 
 Hackathon MVP. Korean first, English toggle. Runs locally on SQLite; nothing external.
 

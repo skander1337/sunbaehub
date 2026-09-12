@@ -94,3 +94,13 @@ export const IconFlag = ({ size = 20, ...p }: P) => (
     <path d="M5 21V4h11l-1.5 4L16 12H5" />
   </svg>
 );
+export const IconPaperclip = ({ size = 20, ...p }: P) => (
+  <svg {...base(size, p)}>
+    <path d="m20 11-8.5 8.5a5 5 0 0 1-7-7L13 4a3.3 3.3 0 0 1 4.7 4.7L9.5 17a1.6 1.6 0 0 1-2.3-2.3L15 7" />
+  </svg>
+);
+export const IconMenu = ({ size = 20, ...p }: P) => (
+  <svg {...base(size, p)}>
+    <path d="M4 7h16M4 12h16M4 17h16" />
+  </svg>
+);

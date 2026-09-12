@@ -84,8 +84,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </dd>
           {(profile.verification === "none" || profile.verification === "rejected") && (
             <form action={requestVerification} className="mt-3">
-              <button type="submit" className="btn btn-sm btn-primary">{t("dash.requestVerification")}</button>
-              <p className="mt-2 text-[11.5px] leading-snug text-ink-3">{t("dash.requestVerificationHint")}</p>
+              <button type="submit" disabled={!profile.resumePath} className="btn btn-sm btn-primary">{t("dash.requestVerification")}</button>
+              <p className="mt-2 text-[11.5px] leading-snug text-ink-3">{profile.resumePath ? t("dash.requestVerificationHint") : t("dash.needResume")}</p>
             </form>
           )}
         </div>

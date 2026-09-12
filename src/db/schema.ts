@@ -87,9 +87,25 @@ export const messages = sqliteTable(
     body: text("body").notNull(),
     lang: text("lang").notNull().default("ko"), // detected ko | en
     translatedBody: text("translated_body"), // stub output, null if unmatched
+    attachmentId: text("attachment_id"), // set when kind = "file"
     createdAt: createdAt(),
   },
   (t) => [index("messages_booking_created").on(t.bookingId, t.createdAt)],
+);
+
+export const attachments = sqliteTable(
+  "attachments",
+  {
+    id: id(),
+    bookingId: text("booking_id").notNull().references(() => bookings.id),
+    uploaderId: text("uploader_id").notNull().references(() => users.id),
+    fileName: text("file_name").notNull(),
+    storedPath: text("stored_path").notNull(), // server-generated, relative to project root
+    mime: text("mime").notNull(),
+    size: integer("size").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("attachments_booking").on(t.bookingId)],
 );
 
 export const reviews = sqliteTable(
@@ -266,6 +282,7 @@ export type SpecialistProfile = typeof specialistProfiles.$inferSelect;
 export type AvailabilityRule = typeof availabilityRules.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
 export type Message = typeof messages.$inferSelect;
+export type Attachment = typeof attachments.$inferSelect;
 export type Review = typeof reviews.$inferSelect;
 export type ReviewFlag = typeof reviewFlags.$inferSelect;
 export type Post = typeof posts.$inferSelect;

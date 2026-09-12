@@ -8,6 +8,8 @@ import { BookingRuleError, SlotUnavailable, cancelBooking as cancelBookingSvc, c
 import { InsufficientCredits } from "@/lib/services/ledger";
 import { ReviewRuleError, submitReview as submitReviewSvc } from "@/lib/services/review";
 import { DisputeRuleError, openDispute as openDisputeSvc } from "@/lib/services/dispute";
+import { publish } from "@/lib/realtime";
+import { AttachmentError, persistAttachmentFile, recordAttachment } from "@/lib/services/attachments";
 
 function fail(path: string, code: string): never {
   redirect(`${path}${path.includes("?") ? "&" : "?"}error=${encodeURIComponent(code)}`);
@@ -21,6 +23,17 @@ export async function createBooking(formData: FormData) {
   const note = String(formData.get("note") ?? "");
   const back = `/specialists/${specialistId}`;
   if (!specialistId || Number.isNaN(startAt.getTime()) || !category) fail(back, "invalid");
+  const attachment = formData.get("attachment");
+  const hasFile = attachment instanceof File && attachment.size > 0;
+  if (hasFile) {
+    try {
+      const { validateAttachment } = await import("@/lib/services/attachments");
+      validateAttachment(attachment);
+    } catch (e) {
+      if (e instanceof AttachmentError) fail(back, e.code === "file_size" ? "file_size" : "file_type");
+      throw e;
+    }
+  }
   let id = "";
   try {
     id = db.transaction((tx) => createBookingSvc(tx, { seekerId: user.id, specialistId, startAt, category, note }, new Date())).id;
@@ -29,6 +42,11 @@ export async function createBooking(formData: FormData) {
     if (e instanceof InsufficientCredits) fail(back, "credits");
     if (e instanceof BookingRuleError) fail(back, e.code);
     throw e;
+  }
+  if (hasFile) {
+    const { storedPath, size } = await persistAttachmentFile(id, attachment);
+    const now = new Date();
+    db.transaction((tx) => recordAttachment(tx, { bookingId: id, uploaderId: user.id, fileName: attachment.name, mime: attachment.type, size, storedPath }, now));
   }
   revalidatePath("/", "layout");
   redirect(`/me/bookings?booked=${id}`);
@@ -57,6 +75,7 @@ export async function endSession(formData: FormData) {
     if (e instanceof BookingRuleError) fail(`/sessions/${bookingId}`, e.code);
     throw e;
   }
+  publish(bookingId, "status", { status: "completed" });
   revalidatePath("/", "layout");
   redirect(`/sessions/${bookingId}`);
 }
@@ -97,6 +116,7 @@ export async function devShiftBooking(formData: FormData) {
   const bookingId = String(formData.get("bookingId") ?? "");
   const mode = String(formData.get("mode") ?? "") === "end_now" ? "end_now" : "start_now";
   db.transaction((tx) => devShiftSvc(tx, bookingId, mode, new Date()));
+  publish(bookingId, "status", { status: mode });
   revalidatePath("/", "layout");
   redirect(`/sessions/${bookingId}`);
 }

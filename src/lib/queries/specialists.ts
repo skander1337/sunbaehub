@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { priceFor, priceNote, type PriceBreakdown } from "@/lib/rules/pricing";
 import { isRanked } from "@/lib/rules/ranking";
@@ -42,7 +42,7 @@ export function listSpecialists(opts: { category?: string; verifiedOnly?: boolea
     .select({ u: schema.users, p: schema.specialistProfiles })
     .from(schema.specialistProfiles)
     .innerJoin(schema.users, eq(schema.users.id, schema.specialistProfiles.userId))
-    .where(opts.verifiedOnly ? eq(schema.specialistProfiles.verification, "verified") : undefined)
+    .where(and(isNotNull(schema.specialistProfiles.resumePath), opts.verifiedOnly ? eq(schema.specialistProfiles.verification, "verified") : undefined))
     .orderBy(desc(schema.specialistProfiles.rankScore), desc(schema.specialistProfiles.reviewCount))
     .all();
   return rows
