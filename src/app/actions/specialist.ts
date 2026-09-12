@@ -9,18 +9,21 @@ import { db, schema } from "@/lib/db";
 import { requireSpecialist } from "@/lib/auth";
 import { CATEGORIES } from "@/lib/categories";
 import { postTx } from "@/lib/services/ledger";
+import { isProfileComplete, submitForReview } from "@/lib/services/admin";
 import type { Education, Experience } from "@/db/schema";
 
 const str = (fd: FormData, k: string, max = 200) => String(fd.get(k) ?? "").trim().slice(0, max);
 
 export async function updateProfile(formData: FormData) {
-  const { user } = await requireSpecialist();
+  const { user, profile: current } = await requireSpecialist();
+  const intent = String(formData.get("intent") ?? "save") === "submit" ? "submit" : "save";
+  const back = intent === "submit" ? "/specialist/onboarding" : "/specialist/profile";
   const headline = str(formData, "headline", 80);
   const bio = str(formData, "bio", 1200);
   const basePrice = Math.round(Number(formData.get("basePrice")));
   const categories = CATEGORIES.map((c) => c.id).filter((id) => formData.getAll("categories").includes(id));
   if (headline.length < 2 || bio.length < 10 || !Number.isFinite(basePrice) || basePrice < 10 || basePrice > 1000 || categories.length === 0) {
-    redirect("/specialist/profile?error=invalid");
+    redirect(`${back}?error=invalid`);
   }
   const education: Education[] = [];
   const experience: Experience[] = [];
@@ -30,21 +33,35 @@ export async function updateProfile(formData: FormData) {
     const company = str(formData, `exp_company_${i}`);
     if (company) experience.push({ company, title: str(formData, `exp_title_${i}`), years: str(formData, `exp_years_${i}`, 40) });
   }
-  const patch: Partial<typeof schema.specialistProfiles.$inferInsert> = { headline, bio, basePrice, categories, education, experience };
+  if (education.length === 0) redirect(`${back}?error=education_required`);
+  if (experience.length === 0) redirect(`${back}?error=experience_required`);
 
+  const patch: Partial<typeof schema.specialistProfiles.$inferInsert> = { headline, bio, basePrice, categories, education, experience };
   const file = formData.get("resume");
-  const existing = db.select({ resumePath: schema.specialistProfiles.resumePath }).from(schema.specialistProfiles).where(eq(schema.specialistProfiles.userId, user.id)).get();
-  if (!existing?.resumePath && !(file instanceof File && file.size > 0)) redirect("/specialist/profile?error=resume_required");
+  if (!current.resumePath && !(file instanceof File && file.size > 0)) redirect(`${back}?error=resume_required`);
   if (file instanceof File && file.size > 0) {
-    if (file.type !== "application/pdf" || file.size > 8 * 1024 * 1024) redirect("/specialist/profile?error=file");
+    if (file.type !== "application/pdf" || file.size > 8 * 1024 * 1024) redirect(`${back}?error=file`);
     const dir = path.join(process.cwd(), "uploads");
     await mkdir(dir, { recursive: true });
     await writeFile(path.join(dir, `${user.id}.pdf`), Buffer.from(await file.arrayBuffer()));
     patch.resumePath = `uploads/${user.id}.pdf`;
   }
-  db.update(schema.specialistProfiles).set(patch).where(eq(schema.specialistProfiles.userId, user.id)).run();
+  const now = new Date();
+  const submitted = db.transaction((tx) => {
+    tx.update(schema.specialistProfiles).set(patch).where(eq(schema.specialistProfiles.userId, user.id)).run();
+    if (intent === "submit" || current.verification === "rejected") return submitForReview(tx, user.id, now);
+    return false;
+  });
   revalidatePath("/", "layout");
-  redirect("/specialist/profile?saved=1");
+  if (intent === "submit") redirect(submitted ? "/specialist/dashboard?submitted=1" : `${back}?error=not_complete`);
+  redirect(`/specialist/profile?saved=1${submitted ? "&submitted=1" : ""}`);
+}
+
+export async function resubmitForReview() {
+  const { user } = await requireSpecialist();
+  const ok = db.transaction((tx) => submitForReview(tx, user.id, new Date()));
+  revalidatePath("/", "layout");
+  redirect(ok ? "/specialist/dashboard?submitted=1" : "/specialist/onboarding?error=not_complete");
 }
 
 export async function saveAvailability(formData: FormData) {

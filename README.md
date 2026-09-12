@@ -25,7 +25,9 @@ Log in at `/login` with the demo credentials below (they are not shown anywhere 
 | 선배 (expert) | seojun@sunbaehub.demo | sunbae1234 |
 | 관리자 (admin) | admin@sunbaehub.demo | admin1234 |
 
-Every seeded seeker uses `hoobae1234` and every seeded specialist `sunbae1234`. Sign-up at `/signup` creates real accounts (scrypt-hashed passwords) for either role.
+Every seeded seeker uses `hoobae1234` and every seeded specialist `sunbae1234`.
+
+**Sign-up** at `/signup` creates real accounts for either role. A seeker is live immediately (optional affiliation, 200 welcome credits). A 선배 goes through onboarding: account → profile with education, experience, topics, base rate and a required CV (PDF) → *심사 요청* → the admin queue at `/admin/verifications`. Until approved the profile is hidden from the directory, the leaderboard and the landing page, and cannot be booked; a rejection carries the admin's note and can be resubmitted after editing.
 
 1. **김지우** (seeker) → 선배 찾기 → **박서준**. His price reads *135 크레딧 · 기본가의 1.35배 · 리뷰 12개 · 평균 88점*: the multiplier and its reason. Pick a slot, book. Credits are held.
 2. 내 예약 → the live session with 박서준 → **입장하기**. In the incognito window log in as **박서준** → 선배 대시보드 → 입장하기. Messages arrive instantly over server-sent events with a typing indicator. Chat in Korean from one side and English from the other; each message shows auto-translated with a *원문 보기* toggle. Attach a PDF or image with the paperclip, or at booking time (the 자소서 shows in the room before the session starts). Try *통화* (a placeholder call with a timer). *세션 종료* ends it early.
@@ -71,6 +73,6 @@ src/db           Drizzle schema, client, seed
 src/lib/i18n     ko/en dictionary, locale cookie
 ```
 
-Checks: `npm run e2e` drives two real browsers through login, booking with an attachment, live chat with translation, and file sharing (dev server required). `node scripts/mobile-check.mjs <specialistId>` reports any route wider than a 390px viewport.
+Checks: `npm run e2e:onboarding` walks a new 선배 through sign-up, onboarding with a CV, the pending state, admin approval and public listing, plus a seeker sign-up. `npm run e2e` drives two real browsers through login, booking with an attachment, live chat with translation, and file sharing (dev server required). `node scripts/mobile-check.mjs <specialistId>` reports any route wider than a 390px viewport.
 
 Design context lives in `PRODUCT.md` and `DESIGN.md` (Impeccable).

@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/password";
-import { CATEGORIES } from "@/lib/categories";
 import { postTx } from "@/lib/services/ledger";
 import { clearSessionCookie, createSession, currentSessionToken, deleteSessionByToken, setSessionCookie } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
@@ -61,15 +60,7 @@ export async function signup(formData: FormData) {
   if (!EMAIL.test(email)) redirect(back("email_invalid"));
   if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) redirect(back("password_short"));
 
-  let headline = "";
-  let categories: string[] = [];
-  let basePrice = 100;
-  if (role === "expert") {
-    headline = String(formData.get("headline") ?? "").trim().slice(0, 80);
-    categories = CATEGORIES.map((c) => c.id).filter((id) => formData.getAll("categories").includes(id));
-    basePrice = Math.round(Number(formData.get("basePrice")));
-    if (headline.length < 2 || categories.length === 0 || !Number.isFinite(basePrice) || basePrice < 10 || basePrice > 1000) redirect(back("invalid"));
-  }
+  const affiliation = role === "seeker" ? String(formData.get("affiliation") ?? "").trim().slice(0, 80) || null : null;
 
   const id = crypto.randomUUID();
   const now = new Date();
@@ -77,10 +68,10 @@ export async function signup(formData: FormData) {
   let expiresAt = now;
   try {
     db.transaction((tx) => {
-      tx.insert(schema.users).values({ id, name, email, passwordHash: hashPassword(password), isSpecialist: role === "expert", createdAt: now }).run();
+      tx.insert(schema.users).values({ id, name, email, passwordHash: hashPassword(password), isSpecialist: role === "expert", affiliation, createdAt: now }).run();
       postTx(tx, { userId: id, type: "signup_grant", amount: 200, note: "가입 축하 크레딧", createdAt: now });
       if (role === "expert") {
-        tx.insert(schema.specialistProfiles).values({ userId: id, headline, bio: "", categories, basePrice, education: [], experience: [], verification: "none" }).run();
+        tx.insert(schema.specialistProfiles).values({ userId: id, headline: "", bio: "", categories: [], basePrice: 100, education: [], experience: [], verification: "none" }).run();
       }
       ({ token, expiresAt } = createSession(tx, id, now));
     });
@@ -89,7 +80,7 @@ export async function signup(formData: FormData) {
     throw e;
   }
   await setSessionCookie(token, expiresAt);
-  redirect(role === "expert" ? "/specialist/profile?welcome=1" : "/specialists");
+  redirect(role === "expert" ? "/specialist/onboarding" : "/specialists");
 }
 
 export async function logout() {

@@ -8,14 +8,15 @@ import { categoryLabel } from "@/lib/categories";
 import { fmtDateTime, fmtRelativeDay } from "@/lib/seoul";
 import { FRAUD_RULE_LABELS, type FraudRule } from "@/lib/rules/fraud";
 import { cancelBooking } from "@/app/actions/booking";
-import { requestVerification } from "@/app/actions/admin";
+import { resubmitForReview } from "@/app/actions/specialist";
+import { isProfileComplete } from "@/lib/services/admin";
 import { StatusTag } from "@/components/StatusTag";
 import { Notice } from "@/components/Notice";
 import { FormError } from "@/components/FormError";
 import { IconArrow } from "@/components/icons";
 import type { DictKey } from "@/lib/i18n/dictionary";
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ requested?: string; error?: string }> }) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ requested?: string; submitted?: string; error?: string }> }) {
   const sp = await searchParams;
   const [{ user, profile }, { t, locale }] = await Promise.all([requireSpecialist(), getT()]);
   const card = getSpecialistCard(user.id)!;
@@ -23,7 +24,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const rankIdx = listSpecialists().filter((s) => s.ranked).findIndex((s) => s.id === user.id);
 
   const rows = db
-    .select({ b: schema.bookings, seeker: schema.users.name })
+    .select({ b: schema.bookings, seeker: schema.users.name, affiliation: schema.users.affiliation })
     .from(schema.bookings)
     .innerJoin(schema.users, eq(schema.users.id, schema.bookings.seekerId))
     .where(eq(schema.bookings.specialistId, user.id))
@@ -56,7 +57,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </Link>
       </div>
       <div className="mt-6">
-        {sp.requested && <Notice tone="info">{t("dash.verifiedOk")}</Notice>}
+        {(sp.requested || sp.submitted) && <Notice tone="info">{t("onboarding.submitted")}</Notice>}
         <FormError code={sp.error} />
       </div>
 
@@ -82,14 +83,39 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <dd className="mt-2">
             <span className={`tag ${vTone}`}>{t(vKey)}</span>
           </dd>
-          {(profile.verification === "none" || profile.verification === "rejected") && (
-            <form action={requestVerification} className="mt-3">
-              <button type="submit" disabled={!profile.resumePath} className="btn btn-sm btn-primary">{t("dash.requestVerification")}</button>
-              <p className="mt-2 text-[11.5px] leading-snug text-ink-3">{profile.resumePath ? t("dash.requestVerificationHint") : t("dash.needResume")}</p>
-            </form>
-          )}
         </div>
       </dl>
+
+      {profile.verification !== "verified" && (
+        <section className={`mt-6 rounded-[16px] p-6 ${profile.verification === "rejected" ? "bg-[#fdecec]" : "bg-brand-tint"}`}>
+          {profile.verification === "pending" ? (
+            <>
+              <h2 className="text-[17px] font-bold text-brand-deep">{t("dash.pendingTitle")}</h2>
+              <p className="mt-1.5 max-w-[60ch] text-[14.5px] leading-relaxed text-ink-2">{t("dash.pendingBody")}</p>
+            </>
+          ) : profile.verification === "rejected" ? (
+            <>
+              <h2 className="text-[17px] font-bold text-danger">{t("dash.rejectedTitle")}</h2>
+              <p className="mt-1.5 max-w-[60ch] text-[14.5px] leading-relaxed text-ink-2">{t("dash.rejectedBody")}</p>
+              {profile.verificationNote && <p className="mt-3 rounded-[10px] bg-paper px-4 py-3 text-[14px] text-ink">“{profile.verificationNote}”</p>}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link href="/specialist/profile" className="btn btn-sm btn-outline">{t("dash.editProfile")}</Link>
+                {isProfileComplete(profile) && (
+                  <form action={resubmitForReview}>
+                    <button type="submit" className="btn btn-sm btn-primary">{t("dash.resubmit")}</button>
+                  </form>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-[17px] font-bold text-brand-deep">{t("dash.incompleteTitle")}</h2>
+              <p className="mt-1.5 max-w-[60ch] text-[14.5px] leading-relaxed text-ink-2">{t("dash.incompleteBody")}</p>
+              <Link href="/specialist/onboarding" className="btn btn-sm btn-primary mt-4">{t("dash.completeProfile")}</Link>
+            </>
+          )}
+        </section>
+      )}
 
       <nav className="mt-6 flex flex-wrap gap-2" aria-label={t("dash.links")}>
         <Link href="/specialist/profile" className="btn btn-sm btn-secondary">{t("dash.editProfile")}</Link>
@@ -106,7 +132,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <p className="panel mt-3 p-8 text-center text-[14.5px] text-ink-2">{t("dash.emptyUpcoming")}</p>
         ) : (
           <ul className="mt-3 space-y-3">
-            {upcoming.map(({ b, seeker }) => (
+            {upcoming.map(({ b, seeker, affiliation }) => (
               <li key={b.id} className="card flex flex-wrap items-start justify-between gap-3 p-5">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -114,7 +140,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     <span className="tnum text-[13px] font-semibold text-ink-2">{fmtRelativeDay(b.startAt, now, locale)}</span>
                   </div>
                   <div className="mt-2 text-[17px] font-bold">
-                    {seeker} <span className="muted text-[13px] font-medium">{t("dash.seeker")}</span>
+                    {seeker} <span className="muted text-[13px] font-medium">{affiliation ?? t("dash.seeker")}</span>
                   </div>
                   <div className="tnum mt-1 text-[14px] text-ink-2">
                     {fmtDateTime(b.startAt, locale)} · {categoryLabel(b.category, locale)} · {t("common.creditsN", { n: b.price })}

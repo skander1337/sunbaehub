@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { signup } from "@/app/actions/auth";
-import { CATEGORIES } from "@/lib/categories";
 import { FormError } from "@/components/FormError";
 import { RoleFields } from "@/components/RoleFields";
 
 export default async function SignupPage({ searchParams }: { searchParams: Promise<{ role?: string; error?: string }> }) {
   const { role, error } = await searchParams;
-  const { t, locale } = await getT();
+  const { t } = await getT();
   const initialRole = role === "expert" ? "expert" : "seeker";
   const label = "mb-1.5 block text-[13px] font-semibold text-ink-3";
   return (
@@ -34,12 +33,10 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
             role: t("signup.role"),
             seeker: t("signup.roleSeeker"),
             expert: t("signup.roleExpert"),
-            headline: t("signup.headline"),
-            headlinePh: t("signup.headlinePh"),
-            categories: t("signup.categories"),
-            basePrice: t("signup.basePrice"),
+            expertHint: t("signup.expertHint"),
+            affiliation: t("signup.affiliation"),
+            affiliationPh: t("signup.affiliationPh"),
           }}
-          categories={CATEGORIES.map((c) => ({ id: c.id, label: c[locale] }))}
         />
         <button type="submit" className="btn btn-primary w-full">{t("signup.submit")}</button>
         <p className="text-center text-[13.5px] text-ink-2">

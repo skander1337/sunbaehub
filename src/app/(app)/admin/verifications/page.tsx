@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { getT } from "@/lib/i18n/server";
 import { categoryLabel } from "@/lib/categories";
+import { fmtDateTime } from "@/lib/seoul";
 import { reviewVerification } from "@/app/actions/admin";
 
 export default async function VerificationsPage() {
@@ -23,6 +24,7 @@ export default async function VerificationsPage() {
               <div className="flex flex-wrap items-baseline gap-2">
                 <span className="text-[17px] font-bold">{u.name}</span>
                 <span className="muted text-[14px]">{p.headline}</span>
+                {p.submittedAt && <span className="tnum text-[12.5px] text-ink-3">· {t("admin.submittedAt")} {fmtDateTime(p.submittedAt, locale)}</span>}
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {p.categories.map((c) => (
@@ -53,10 +55,14 @@ export default async function VerificationsPage() {
                     {t("admin.resume")} (PDF)
                   </a>
                 )}
-                <form action={reviewVerification} className="flex gap-2">
+                <form action={reviewVerification} className="flex w-full flex-col gap-2 sm:max-w-xl">
                   <input type="hidden" name="userId" value={u.id} />
-                  <button type="submit" name="decision" value="verified" className="btn btn-sm btn-primary">{t("admin.approve")}</button>
-                  <button type="submit" name="decision" value="rejected" className="btn btn-sm btn-danger">{t("admin.reject")}</button>
+                  <label htmlFor={`note-${u.id}`} className="text-[12.5px] font-semibold text-ink-3">{t("admin.rejectNote")}</label>
+                  <input id={`note-${u.id}`} name="note" maxLength={500} placeholder={t("admin.noteHint")} className="field h-10" />
+                  <div className="flex gap-2">
+                    <button type="submit" name="decision" value="verified" className="btn btn-sm btn-primary">{t("admin.approve")}</button>
+                    <button type="submit" name="decision" value="rejected" className="btn btn-sm btn-danger">{t("admin.reject")}</button>
+                  </div>
                 </form>
               </div>
             </li>

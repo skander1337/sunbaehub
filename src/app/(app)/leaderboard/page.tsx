@@ -9,7 +9,7 @@ export default async function LeaderboardPage() {
   const { t, locale } = await getT();
   const all = listSpecialists();
   const ranked = all.filter((s) => s.ranked);
-  const fresh = all.filter((s) => !s.ranked && s.verification === "verified");
+  const fresh = all.filter((s) => !s.ranked);
 
   return (
     <div>

@@ -41,7 +41,8 @@ export default async function SessionPage({ params, searchParams }: { params: Pr
             <StatusTag status={booking.status} t={t} />
           </div>
           <p className="muted mt-1 text-[14.5px]">
-            {t("session.partner")}: <Link href={isSeeker ? `/specialists/${otherId}` : "#"} className="font-semibold text-ink hover:text-brand-deep">{other.name}</Link> · {categoryLabel(booking.category, locale)} ·{" "}
+            {t("session.partner")}: <Link href={isSeeker ? `/specialists/${otherId}` : "#"} className="font-semibold text-ink hover:text-brand-deep">{other.name}</Link>
+            {!isSeeker && other.affiliation ? ` (${other.affiliation})` : ""} · {categoryLabel(booking.category, locale)} ·{" "}
             <span className="tnum">{fmtDateTime(booking.startAt, locale)}–{fmtTime(booking.endAt)}</span> · {t("common.creditsN", { n: booking.price })}
           </p>
         </div>

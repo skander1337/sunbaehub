@@ -15,7 +15,7 @@ import { dayName, fmtTime, seoulParts } from "@/lib/seoul";
 export default async function LandingPage() {
   const { t, locale } = await getT();
   const now = new Date();
-  const all = listSpecialists({ verifiedOnly: true });
+  const all = listSpecialists();
   const featured = [...all].sort((a, b) => b.reviewCount - a.reviewCount)[0] ?? null;
   const strip = all.filter((s) => s.ranked).slice(0, 4);
 

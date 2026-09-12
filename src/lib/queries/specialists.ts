@@ -37,12 +37,12 @@ const toCard = (u: { id: string; name: string }, p: typeof schema.specialistProf
   };
 };
 
-export function listSpecialists(opts: { category?: string; verifiedOnly?: boolean } = {}): SpecialistCardData[] {
+export function listSpecialists(opts: { category?: string } = {}): SpecialistCardData[] {
   const rows = db
     .select({ u: schema.users, p: schema.specialistProfiles })
     .from(schema.specialistProfiles)
     .innerJoin(schema.users, eq(schema.users.id, schema.specialistProfiles.userId))
-    .where(and(isNotNull(schema.specialistProfiles.resumePath), opts.verifiedOnly ? eq(schema.specialistProfiles.verification, "verified") : undefined))
+    .where(and(isNotNull(schema.specialistProfiles.resumePath), eq(schema.specialistProfiles.verification, "verified")))
     .orderBy(desc(schema.specialistProfiles.rankScore), desc(schema.specialistProfiles.reviewCount))
     .all();
   return rows

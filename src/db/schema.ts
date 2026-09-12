@@ -18,6 +18,7 @@ export const users = sqliteTable("users", {
   isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
   isPlatform: integer("is_platform", { mode: "boolean" }).notNull().default(false),
   locale: text("locale").notNull().default("ko"), // ko | en
+  affiliation: text("affiliation"), // seeker: school / major / year, optional
   creditBalance: integer("credit_balance").notNull().default(0), // cache; only via ledger.postTx()
   strikes: integer("strikes").notNull().default(0),
   createdAt: createdAt(),
@@ -44,6 +45,8 @@ export const specialistProfiles = sqliteTable("specialist_profiles", {
   experience: text("experience", { mode: "json" }).$type<Experience[]>().notNull(),
   resumePath: text("resume_path"),
   verification: text("verification").notNull().default("none"), // none | pending | verified | rejected
+  verificationNote: text("verification_note"), // admin note shown to the specialist on rejection
+  submittedAt: ts("submitted_at"), // when the profile was last submitted for review
   reviewCount: integer("review_count").notNull().default(0), // cached from visible reviews
   avgScore: real("avg_score").notNull().default(0),
   rankScore: real("rank_score").notNull().default(0),

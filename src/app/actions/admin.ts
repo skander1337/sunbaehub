@@ -3,11 +3,11 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requireAdmin, requireSpecialist } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { resolveFlag as resolveFlagSvc, runFraudScan } from "@/lib/services/review";
 import { resolveDispute as resolveDisputeSvc } from "@/lib/services/dispute";
 import { settleDueBookings } from "@/lib/services/settlement";
-import { requestVerification as requestVerificationSvc, reviewVerification as reviewVerificationSvc, resolveWithdrawal as resolveWithdrawalSvc } from "@/lib/services/admin";
+import { reviewVerification as reviewVerificationSvc, resolveWithdrawal as resolveWithdrawalSvc } from "@/lib/services/admin";
 
 export async function runScan() {
   await requireAdmin();
@@ -46,7 +46,8 @@ export async function reviewVerification(formData: FormData) {
   await requireAdmin();
   const userId = String(formData.get("userId") ?? "");
   const decision = String(formData.get("decision")) === "verified" ? "verified" : "rejected";
-  db.transaction((tx) => reviewVerificationSvc(tx, userId, decision, new Date()));
+  const note = String(formData.get("note") ?? "");
+  db.transaction((tx) => reviewVerificationSvc(tx, userId, decision, note, new Date()));
   revalidatePath("/", "layout");
   redirect("/admin/verifications");
 }
@@ -58,11 +59,4 @@ export async function resolveWithdrawal(formData: FormData) {
   db.transaction((tx) => resolveWithdrawalSvc(tx, id, decision, new Date()));
   revalidatePath("/", "layout");
   redirect("/admin/withdrawals");
-}
-
-export async function requestVerification() {
-  const { user } = await requireSpecialist();
-  db.transaction((tx) => requestVerificationSvc(tx, user.id, new Date()));
-  revalidatePath("/", "layout");
-  redirect("/specialist/dashboard?requested=1");
 }

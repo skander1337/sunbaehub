@@ -1,18 +1,27 @@
 import { eq } from "drizzle-orm";
 import type { Db, Tx } from "@/db";
-import { notifications, specialistProfiles, withdrawalRequests } from "@/db/schema";
+import { notifications, specialistProfiles, withdrawalRequests, type SpecialistProfile } from "@/db/schema";
 import { postTx } from "./ledger";
 
-export function requestVerification(tx: Tx | Db, userId: string, now: Date): void {
-  const p = tx.select().from(specialistProfiles).where(eq(specialistProfiles.userId, userId)).get();
-  if (!p || !p.resumePath || p.verification === "verified" || p.verification === "pending") return;
-  tx.update(specialistProfiles).set({ verification: "pending" }).where(eq(specialistProfiles.userId, userId)).run();
-  void now;
+export function isProfileComplete(p: Pick<SpecialistProfile, "headline" | "bio" | "categories" | "education" | "experience" | "resumePath">): boolean {
+  return p.headline.trim().length >= 2 && p.bio.trim().length >= 10 && p.categories.length > 0 && p.education.length > 0 && p.experience.length > 0 && !!p.resumePath;
 }
 
-export function reviewVerification(tx: Tx | Db, userId: string, decision: "verified" | "rejected", now: Date): void {
-  tx.update(specialistProfiles).set({ verification: decision }).where(eq(specialistProfiles.userId, userId)).run();
-  tx.insert(notifications).values({ userId, kind: "verification", params: { status: decision }, href: "/specialist/dashboard", createdAt: now }).run();
+/** Moves a complete, unreviewed (or rejected) profile into the admin review queue. Returns false when incomplete. */
+export function submitForReview(tx: Tx | Db, userId: string, now: Date): boolean {
+  const p = tx.select().from(specialistProfiles).where(eq(specialistProfiles.userId, userId)).get();
+  if (!p || p.verification === "verified" || p.verification === "pending") return p?.verification === "pending";
+  if (!isProfileComplete(p)) return false;
+  tx.update(specialistProfiles).set({ verification: "pending", submittedAt: now, verificationNote: null }).where(eq(specialistProfiles.userId, userId)).run();
+  return true;
+}
+
+export function reviewVerification(tx: Tx | Db, userId: string, decision: "verified" | "rejected", note: string, now: Date): void {
+  const trimmed = note.trim().slice(0, 500);
+  tx.update(specialistProfiles).set({ verification: decision, verificationNote: decision === "rejected" && trimmed ? trimmed : null }).where(eq(specialistProfiles.userId, userId)).run();
+  tx.insert(notifications)
+    .values({ userId, kind: "verification", params: decision === "rejected" && trimmed ? { status: "rejected_note", note: trimmed } : { status: decision }, href: "/specialist/dashboard", createdAt: now })
+    .run();
 }
 
 export function resolveWithdrawal(tx: Tx | Db, id: string, decision: "paid" | "rejected", now: Date): void {

@@ -43,19 +43,19 @@ db.insert(s.users).values({ id: platformId, name: "SunbaeHub Platform", email: "
 const adminId = uuid();
 db.insert(s.users).values({ id: adminId, name: "관리자", email: "admin@sunbaehub.demo", passwordHash: hashPassword(DEMO_PASSWORDS.admin), isSeeker: false, isAdmin: true, createdAt: new Date(now.getTime() - 120 * DAY) }).run();
 
-type SeekerSpec = { key: string; name: string; email: string; createdAgoDays: number; topup?: number };
+type SeekerSpec = { key: string; name: string; email: string; createdAgoDays: number; topup?: number; affiliation?: string };
 const seekerSpecs: SeekerSpec[] = [
-  { key: "jiwoo", name: "김지우", email: "jiwoo@korea.ac.kr", createdAgoDays: 80, topup: 2000 },
-  { key: "seoyun", name: "이서윤", email: "seoyun@korea.ac.kr", createdAgoDays: 75, topup: 1500 },
-  { key: "minjun", name: "박민준", email: "minjun@korea.ac.kr", createdAgoDays: 70, topup: 1500 },
-  { key: "jimin", name: "최지민", email: "jimin@korea.ac.kr", createdAgoDays: 65, topup: 1500 },
+  { key: "jiwoo", name: "김지우", email: "jiwoo@korea.ac.kr", createdAgoDays: 80, topup: 2000, affiliation: "고려대학교 경영학과 4학년" },
+  { key: "seoyun", name: "이서윤", email: "seoyun@korea.ac.kr", createdAgoDays: 75, topup: 1500, affiliation: "고려대학교 미디어학부 졸업" },
+  { key: "minjun", name: "박민준", email: "minjun@korea.ac.kr", createdAgoDays: 70, topup: 1500, affiliation: "고려대학교 컴퓨터학과 4학년" },
+  { key: "jimin", name: "최지민", email: "jimin@korea.ac.kr", createdAgoDays: 65, topup: 1500, affiliation: "고려대학교 심리학과 3학년" },
   { key: "newbie", name: "신규유저", email: "new@korea.ac.kr", createdAgoDays: 1 },
 ];
 const seekers: Record<string, string> = {};
 for (const sp of seekerSpecs) {
   const id = uuid();
   const createdAt = new Date(now.getTime() - sp.createdAgoDays * DAY);
-  db.insert(s.users).values({ id, name: sp.name, email: sp.email, passwordHash: hashPassword(DEMO_PASSWORDS.seeker), createdAt }).run();
+  db.insert(s.users).values({ id, name: sp.name, email: sp.email, passwordHash: hashPassword(DEMO_PASSWORDS.seeker), affiliation: sp.affiliation ?? null, createdAt }).run();
   postTx(db, { userId: id, type: "signup_grant", amount: 200, note: "가입 축하 크레딧", createdAt });
   if (sp.topup) postTx(db, { userId: id, type: "topup", amount: sp.topup, note: `크레딧 충전 (카카오페이)`, createdAt: new Date(createdAt.getTime() + HOUR) });
   seekers[sp.key] = id;
@@ -110,6 +110,7 @@ for (const sp of specSpecs) {
   db.insert(s.specialistProfiles).values({
     userId: id, headline: sp.headline, bio: sp.bio, categories: sp.categories, basePrice: sp.base,
     education: sp.education, experience: sp.experience, resumePath, verification: sp.verification,
+    submittedAt: sp.verification === "pending" ? new Date(now.getTime() - 6 * HOUR) : new Date(now.getTime() - 85 * DAY),
   }).run();
   for (const r of sp.rules) for (const dow of r.dow) db.insert(s.availabilityRules).values({ specialistId: id, dayOfWeek: dow, startMinute: r.start, endMinute: r.end }).run();
   specialists[sp.key] = id;

@@ -20,6 +20,8 @@ export default async function SpecialistPage({ params, searchParams }: { params:
   if (!card) notFound();
   const profile = db.select().from(schema.specialistProfiles).where(eq(schema.specialistProfiles.userId, id)).get()!;
   const now = new Date();
+  const isOwnerOrAdmin = !!user && (user.id === id || user.isAdmin);
+  if (profile.verification !== "verified" && !isOwnerOrAdmin) notFound();
 
   const rankIdx = listSpecialists().filter((s) => s.ranked).findIndex((s) => s.id === id);
   const { rules, busy } = getAvailabilityInputs(id, now);
@@ -49,6 +51,7 @@ export default async function SpecialistPage({ params, searchParams }: { params:
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_400px]">
       <div className="min-w-0 lg:order-1">
+        {profile.verification !== "verified" && <p className="mb-5 rounded-[12px] bg-brand-tint px-4 py-3 text-[14px] font-medium text-brand-deep">{t("profile.notPublic")}</p>}
         <div className="flex items-start gap-4">
           <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-tint text-[22px] font-bold text-brand">{card.name.slice(0, 1)}</span>
           <div className="min-w-0">
