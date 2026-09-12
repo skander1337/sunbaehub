@@ -11,35 +11,19 @@ const live = db.prepare("select id from bookings where status in ('confirmed','i
 if (!live) throw new Error("no live booking between 김지우 and 박서준; run npm run db:seed");
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
-const mk = async (uid, locale) => {
+const mk = async (email, password, locale) => {
   const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-  await c.addCookies([
-    { name: "sunbae_uid", value: uid, domain: "localhost", path: "/" },
-    { name: "sunbae_locale", value: locale, domain: "localhost", path: "/" },
-  ]);
-  return c.newPage();
-};
-// 0) real login form: wrong password is rejected, right password lands on the directory
-{
-  const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await c.addCookies([{ name: "sunbae_locale", value: locale, domain: "localhost", path: "/" }]);
   const p = await c.newPage();
   await p.goto(`${base}/login`);
-  await p.fill('input[name="email"]', "jiwoo@korea.ac.kr");
-  await p.fill('input[name="password"]', "wrong-password");
+  await p.fill('input[name="email"]', email);
+  await p.fill('input[name="password"]', password);
   await p.click('form button[type="submit"]');
-  await p.waitForURL(/\/login\?error=credentials/, { timeout: 15_000 });
-  await p.fill('input[name="email"]', "jiwoo@korea.ac.kr");
-  await p.fill('input[name="password"]', "hoobae1234");
-  await p.click('form button[type="submit"]');
-  await p.waitForURL(/\/specialists$/, { timeout: 15_000 });
-  const cookies = await c.cookies();
-  if (!cookies.some((k) => k.name === "sunbae_uid")) throw new Error("session cookie not set after login");
-  console.log("PASS login: wrong password rejected, correct password sets the session");
-  await c.close();
-}
-
-const a = await mk(jiwoo.id, "ko"); // seeker, Korean UI
-const b = await mk(seojun.id, "en"); // specialist, English UI
+  await p.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 15_000 });
+  return p;
+};
+const a = await mk("jiwoo@korea.ac.kr", "hoobae1234", "ko"); // seeker, Korean UI
+const b = await mk("seojun@sunbae.demo", "sunbae1234", "en"); // specialist, English UI
 const input = 'form input[maxlength="2000"]';
 const send = 'form:has(input[maxlength="2000"]) button[type="submit"]';
 

@@ -92,6 +92,7 @@ export async function openDispute(formData: FormData) {
 }
 
 export async function devShiftBooking(formData: FormData) {
+  if (process.env.NODE_ENV === "production") redirect("/");
   await requireUser();
   const bookingId = String(formData.get("bookingId") ?? "");
   const mode = String(formData.get("mode") ?? "") === "end_now" ? "end_now" : "start_now";

@@ -23,6 +23,17 @@ export const users = sqliteTable("users", {
   createdAt: createdAt(),
 });
 
+export const sessions = sqliteTable(
+  "sessions",
+  {
+    id: text("id").primaryKey(), // sha256(token); the raw token only ever lives in the cookie
+    userId: text("user_id").notNull().references(() => users.id),
+    createdAt: createdAt(),
+    expiresAt: ts("expires_at").notNull(),
+  },
+  (t) => [index("sessions_user").on(t.userId), index("sessions_expires").on(t.expiresAt)],
+);
+
 export const specialistProfiles = sqliteTable("specialist_profiles", {
   userId: text("user_id").primaryKey().references(() => users.id),
   headline: text("headline").notNull(),

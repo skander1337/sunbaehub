@@ -1,22 +1,18 @@
 import "server-only";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import type { SpecialistProfile, User } from "@/db/schema";
-
-export const UID_COOKIE = "sunbae_uid";
-
-export async function currentUserId(): Promise<string | null> {
-  const v = (await cookies()).get(UID_COOKIE)?.value;
-  return v && v.length > 0 ? v : null;
-}
+import { currentSessionToken, findUserByToken } from "@/lib/session";
 
 export async function currentUser(): Promise<User | null> {
-  const id = await currentUserId();
-  if (!id) return null;
-  const user = db.select().from(schema.users).where(eq(schema.users.id, id)).get();
-  return user ?? null;
+  const token = await currentSessionToken();
+  if (!token) return null;
+  return findUserByToken(token, new Date());
+}
+
+export async function currentUserId(): Promise<string | null> {
+  return (await currentUser())?.id ?? null;
 }
 
 export async function requireUser(next?: string): Promise<User> {

@@ -17,7 +17,7 @@ Requires Node 20.9+ (built with Node 24). `npm run setup` is safe to re-run: it 
 
 ## Demo script (the golden path)
 
-Log in at `/login` with the demo credentials (also shown under the form). Use a normal window and an incognito window to be two people at once.
+Log in at `/login` with the demo credentials below (they are not shown anywhere in the UI). Use a normal window and an incognito window to be two people at once.
 
 | Role | Email | Password |
 |---|---|---|
@@ -40,7 +40,7 @@ Dev-only buttons in the session room (*데모: 지금 시작 / 지금 종료*) s
 
 | Real | Mocked for the demo |
 |---|---|
-| Data model, escrow ledger, dynamic pricing, cancellation rule, refund split, email + password auth (scrypt) | Sessions are a plain httpOnly cookie, no email verification |
+| Data model, escrow ledger, dynamic pricing, cancellation rule, refund split, email + password auth (scrypt), DB-backed sessions with hashed tokens, login rate limiting, security headers | No email verification or password reset (no mail infrastructure) |
 | Availability → 60-minute slots minus existing bookings, server-side double-booking check | Payments: top-up and withdrawal are simulated |
 | Session-window gating of chat (server enforced), lazy session lifecycle, 24h auto-settlement | Chat translation: a phrase-map stub behind a provider-agnostic `translate()`; unmatched text shows *번역 없음* |
 | Six explainable fraud rules, admin queues, verification, posts with per-click credits | Calls: a placeholder panel with a timer, no media |
