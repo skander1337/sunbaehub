@@ -70,6 +70,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <dt className="text-[12.5px] font-semibold text-ink-3">{t("dash.price")}</dt>
           <dd className="tnum mt-1 text-[24px] font-extrabold tracking-[-0.02em]">{card.pricing.price}</dd>
           <dd className="tnum mt-0.5 text-[12px] text-ink-3">{card.note[locale]}</dd>
+          <dd className="tnum mt-0.5 text-[12px] text-ink-3">{t("dash.baseSetByTeam", { n: profile.basePrice })}</dd>
         </div>
         <div className="card p-5">
           <dt className="text-[12.5px] font-semibold text-ink-3">{t("leaderboard.avg")} · {t("leaderboard.reviews")}</dt>
@@ -143,7 +144,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     {seeker} <span className="muted text-[13px] font-medium">{affiliation ?? t("dash.seeker")}</span>
                   </div>
                   <div className="tnum mt-1 text-[14px] text-ink-2">
-                    {fmtDateTime(b.startAt, locale)} · {categoryLabel(b.category, locale)} · {t("common.creditsN", { n: b.price })}
+                    {fmtDateTime(b.startAt, locale)} · {t("profile.minN", { n: b.durationMin })} · {categoryLabel(b.category, locale)} · {t("common.creditsN", { n: b.price })}
                   </div>
                   {b.seekerNote && <p className="muted mt-2 text-[14px]">“{b.seekerNote}”</p>}
                 </div>
@@ -199,7 +200,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                       <span className="text-[15px] font-bold">{seeker}</span>
                     </div>
                     <div className="tnum mt-0.5 text-[13.5px] text-ink-2">
-                      {fmtDateTime(b.startAt, locale)} · {categoryLabel(b.category, locale)} · {t("common.creditsN", { n: b.price })}
+                      {fmtDateTime(b.startAt, locale)} · {t("profile.minN", { n: b.durationMin })} · {categoryLabel(b.category, locale)} · {t("common.creditsN", { n: b.price })}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

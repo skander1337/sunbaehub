@@ -5,11 +5,11 @@ export type BusyRange = { startAt: Date; endAt: Date };
 export type Slot = { startAt: Date; endAt: Date };
 export type DaySlots = { dateKey: string; dayStart: Date; dow: number; slots: Slot[] };
 
-export type SlotOptions = { days?: number; slotMin?: number; leadMin?: number };
+export type SlotOptions = { days?: number; slotMin?: number; stepMin?: number; leadMin?: number };
 
-/** Bookable slots for the next `days` Seoul days from weekly rules, minus busy ranges and anything sooner than `leadMin`. */
+/** Bookable start times (every `stepMin`) for a session of `slotMin` minutes over the next `days` Seoul days, minus busy ranges and anything sooner than `leadMin`. */
 export function computeSlots(rules: SlotRule[], busy: BusyRange[], now: Date, opts: SlotOptions = {}): DaySlots[] {
-  const { days = 14, slotMin = 60, leadMin = 120 } = opts;
+  const { days = 14, slotMin = 60, stepMin = 30, leadMin = 120 } = opts;
   const p = seoulParts(now);
   const earliest = now.getTime() + leadMin * 60_000;
   const out: DaySlots[] = [];
@@ -19,7 +19,7 @@ export function computeSlots(rules: SlotRule[], busy: BusyRange[], now: Date, op
     const slots: Slot[] = [];
     for (const r of rules) {
       if (r.dayOfWeek !== dow) continue;
-      for (let t = r.startMinute; t + slotMin <= r.endMinute; t += slotMin) {
+      for (let t = r.startMinute; t + slotMin <= r.endMinute; t += stepMin) {
         const startAt = fromSeoul(p.y, p.m, p.d + d, t);
         const endAt = new Date(startAt.getTime() + slotMin * 60_000);
         if (startAt.getTime() < earliest) continue;

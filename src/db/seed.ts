@@ -11,6 +11,8 @@ import { fromSeoul, seoulDayKey, seoulParts } from "@/lib/seoul";
 import { DEMO_PHRASES, detectLang, translate } from "@/lib/translate";
 import { hashPassword } from "@/lib/password";
 import { DEMO_PASSWORDS } from "@/lib/demo";
+import { BRAND } from "@/lib/brand";
+import { priceForDuration } from "@/lib/rules/pricing";
 
 const MIN = 60_000;
 const HOUR = 3_600_000;
@@ -56,7 +58,7 @@ for (const sp of seekerSpecs) {
   const id = uuid();
   const createdAt = new Date(now.getTime() - sp.createdAgoDays * DAY);
   db.insert(s.users).values({ id, name: sp.name, email: sp.email, passwordHash: hashPassword(DEMO_PASSWORDS.seeker), affiliation: sp.affiliation ?? null, createdAt }).run();
-  postTx(db, { userId: id, type: "signup_grant", amount: 200, note: "가입 축하 크레딧", createdAt });
+  postTx(db, { userId: id, type: "signup_grant", amount: BRAND.seekerSignupGrant, note: `가입 축하 크레딧 (${BRAND.trialMinutes}분 상담 1회)`, createdAt });
   if (sp.topup) postTx(db, { userId: id, type: "topup", amount: sp.topup, note: `크레딧 충전 (카카오페이)`, createdAt: new Date(createdAt.getTime() + HOUR) });
   seekers[sp.key] = id;
 }
@@ -102,13 +104,12 @@ for (const sp of specSpecs) {
   const id = uuid();
   const createdAt = new Date(now.getTime() - 90 * DAY);
   db.insert(s.users).values({ id, name: sp.name, email: sp.email, passwordHash: hashPassword(DEMO_PASSWORDS.expert), isSpecialist: true, createdAt }).run();
-  postTx(db, { userId: id, type: "signup_grant", amount: 200, note: "가입 축하 크레딧", createdAt });
   const resumePath = `uploads/${id}.pdf`;
   const cv = path.join(process.cwd(), "seed-assets", "cv", `${sp.key}.pdf`);
   if (fs.existsSync(cv)) fs.copyFileSync(cv, path.join(process.cwd(), resumePath));
   else fs.writeFileSync(path.join(process.cwd(), resumePath), tinyPdf(sp.key));
   db.insert(s.specialistProfiles).values({
-    userId: id, headline: sp.headline, bio: sp.bio, categories: sp.categories, basePrice: sp.base,
+    userId: id, headline: sp.headline, bio: sp.bio, categories: sp.categories, basePrice: sp.base, requestedRate: sp.base,
     education: sp.education, experience: sp.experience, resumePath, verification: sp.verification,
     submittedAt: sp.verification === "pending" ? new Date(now.getTime() - 6 * HOUR) : new Date(now.getTime() - 85 * DAY),
   }).run();
@@ -173,23 +174,25 @@ function addMessages(bookingId: string, seekerId: string, specialistId: string, 
   });
 }
 
-type CompletedOpts = { seekerKey: string; specKey: string; category: string; startAt: Date; score: number; reviewBody: string; reviewDelayMin?: number; script?: number[]; countStats?: boolean; noMessages?: boolean };
+type CompletedOpts = { seekerKey: string; specKey: string; category: string; startAt: Date; score: number; reviewBody: string; reviewDelayMin?: number; script?: number[]; countStats?: boolean; noMessages?: boolean; durationMin?: number };
 function completedBooking(o: CompletedOpts) {
   const spec = specSpecs.find((x) => x.key === o.specKey)!;
   const seekerId = seekers[o.seekerKey] ?? specialists[o.seekerKey];
   const specialistId = specialists[o.specKey];
   const pb = currentPrice(o.specKey, spec.base);
-  const endAt = new Date(o.startAt.getTime() + HOUR);
+  const durationMin = o.durationMin ?? 60;
+  const price = priceForDuration(pb.price, durationMin);
+  const endAt = new Date(o.startAt.getTime() + durationMin * MIN);
   const bookingId = uuid();
   const createdAt = new Date(o.startAt.getTime() - 2 * DAY);
   const reviewAt = new Date(endAt.getTime() + (o.reviewDelayMin ?? 45) * MIN);
   db.insert(s.bookings).values({
-    id: bookingId, seekerId, specialistId, category: o.category, startAt: o.startAt, endAt, price: pb.price, priceNote: priceNote(pb, "ko"),
+    id: bookingId, seekerId, specialistId, category: o.category, startAt: o.startAt, endAt, durationMin, price, priceNote: priceNote(pb, "ko"),
     status: "completed", completedAt: endAt, settledAt: reviewAt, createdAt,
   }).run();
-  postTx(db, { userId: seekerId, type: "booking_hold", amount: -pb.price, bookingId, note: `${spec.name} 상담 예약`, createdAt });
+  postTx(db, { userId: seekerId, type: "booking_hold", amount: -price, bookingId, note: `${spec.name} ${durationMin}분 상담 예약`, createdAt });
   if (!o.noMessages) addMessages(bookingId, seekerId, specialistId, o.startAt, o.script ?? convoScripts[Math.floor(Math.random() * convoScripts.length)]);
-  const { platformFee, specialistPayout } = normalSettlement(pb.price);
+  const { platformFee, specialistPayout } = normalSettlement(price);
   postTx(db, { userId: specialistId, type: "booking_release", amount: specialistPayout, bookingId, note: "상담 완료 정산", createdAt: reviewAt });
   postTx(db, { userId: platformId, type: "platform_fee", amount: platformFee, bookingId, note: "플랫폼 수수료 5%", createdAt: reviewAt });
   db.insert(s.reviews).values({ id: uuid(), bookingId, reviewerId: seekerId, specialistId, score: o.score, body: o.reviewBody, status: "visible", createdAt: reviewAt }).run();
@@ -221,7 +224,7 @@ for (const sp of specSpecs) {
     const startAt = pastSlot(sp.rules, Math.max(daysAgo, 3), i);
     completedBooking({
       seekerKey: rotation[rot++ % rotation.length], specKey: sp.key, category: sp.categories[i % sp.categories.length], startAt, score,
-      reviewBody: reviewBodies[(i + rot) % reviewBodies.length], reviewDelayMin: 20 + ((i * 37) % 100),
+      reviewBody: reviewBodies[(i + rot) % reviewBodies.length], reviewDelayMin: 20 + ((i * 37) % 100), durationMin: i % 5 === 2 ? 30 : 60,
     });
   });
 }
@@ -238,7 +241,7 @@ completedBooking({ seekerKey: "doyun", specKey: "yerin", category: "interview", 
   });
 }
 // 3) new account: 신규유저 reviews 최수아 with 100 one day after creation
-completedBooking({ seekerKey: "newbie", specKey: "sua", category: "aptitude", startAt: new Date(now.getTime() - 20 * HOUR), score: 100, reviewBody: "완벽해요!!", reviewDelayMin: 30, countStats: false, script: [0, 3, 12] });
+completedBooking({ seekerKey: "newbie", specKey: "sua", category: "aptitude", startAt: new Date(now.getTime() - 20 * HOUR), score: 100, reviewBody: "완벽해요!!", reviewDelayMin: 30, countStats: false, script: [0, 3, 12], durationMin: 30 });
 
 // ---------- live + upcoming bookings for 김지우 ----------
 {

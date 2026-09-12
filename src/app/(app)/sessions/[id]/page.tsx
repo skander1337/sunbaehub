@@ -43,7 +43,7 @@ export default async function SessionPage({ params, searchParams }: { params: Pr
           <p className="muted mt-1 text-[14.5px]">
             {t("session.partner")}: <Link href={isSeeker ? `/specialists/${otherId}` : "#"} className="font-semibold text-ink hover:text-brand-deep">{other.name}</Link>
             {!isSeeker && other.affiliation ? ` (${other.affiliation})` : ""} · {categoryLabel(booking.category, locale)} ·{" "}
-            <span className="tnum">{fmtDateTime(booking.startAt, locale)}–{fmtTime(booking.endAt)}</span> · {t("common.creditsN", { n: booking.price })}
+            <span className="tnum">{fmtDateTime(booking.startAt, locale)}–{fmtTime(booking.endAt)}</span> · {t("profile.minN", { n: booking.durationMin })} · {t("common.creditsN", { n: booking.price })}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

@@ -25,16 +25,19 @@ export default async function SpecialistPage({ params, searchParams }: { params:
 
   const rankIdx = listSpecialists().filter((s) => s.ranked).findIndex((s) => s.id === id);
   const { rules, busy } = getAvailabilityInputs(id, now);
-  const days: PickerDay[] = computeSlots(rules, busy, now).map((d) => {
-    const p = seoulParts(d.dayStart);
-    return {
-      dateKey: d.dateKey,
-      dayName: dayName(p.dow, locale),
-      dateLabel: String(p.d),
-      isToday: d.dateKey === seoulDayKey(now),
-      slots: d.slots.map((s) => ({ iso: s.startAt.toISOString(), time: fmtTime(s.startAt) })),
-    };
-  });
+  const toPicker = (minutes: number): PickerDay[] =>
+    computeSlots(rules, busy, now, { slotMin: minutes, stepMin: BRAND.slotStepMinutes }).map((d) => {
+      const p = seoulParts(d.dayStart);
+      return {
+        dateKey: d.dateKey,
+        dayName: dayName(p.dow, locale),
+        dateLabel: String(p.d),
+        isToday: d.dateKey === seoulDayKey(now),
+        slots: d.slots.map((s) => ({ iso: s.startAt.toISOString(), time: fmtTime(s.startAt) })),
+      };
+    });
+  const days = toPicker(60);
+  const days30 = toPicker(30);
 
   const canSeeFlagged = !!user && (user.id === id || user.isAdmin);
   const reviews = db
@@ -187,6 +190,7 @@ export default async function SpecialistPage({ params, searchParams }: { params:
             <div className="tnum text-right text-[12.5px] text-ink-3">≈ ₩{(card.pricing.price * BRAND.creditsToWon).toLocaleString()}</div>
           </div>
           <p className="tnum mt-2 text-[13px] text-ink-2">{card.note[locale]}</p>
+          <p className="tnum mt-1 text-[13px] text-ink-3">{t("profile.from30", { n: card.price30 })}</p>
           <div className="hairline mt-5 pt-5">
             {!verified ? (
               <p className="muted text-[14px]">{t("profile.pending")}</p>
@@ -196,7 +200,9 @@ export default async function SpecialistPage({ params, searchParams }: { params:
               <SlotPicker
                 specialistId={id}
                 days={days}
+                days30={days30}
                 price={card.pricing.price}
+                price30={card.price30}
                 balance={user ? user.creditBalance : null}
                 categories={card.categories.map((c) => ({ id: c, label: categoryLabel(c, locale) }))}
                 loginHref={`/login?next=${encodeURIComponent(`/specialists/${id}`)}`}

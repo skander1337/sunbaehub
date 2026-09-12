@@ -20,6 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/disputes", label: t("admin.disputes"), count: counts.disputes },
     { href: "/admin/verifications", label: t("admin.verifications"), count: counts.verifications },
     { href: "/admin/withdrawals", label: t("admin.withdrawals"), count: counts.withdrawals },
+    { href: "/admin/specialists", label: t("admin.rates"), count: null },
   ];
   return (
     <div className="mx-auto max-w-4xl">

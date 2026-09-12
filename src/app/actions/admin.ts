@@ -7,7 +7,7 @@ import { requireAdmin } from "@/lib/auth";
 import { resolveFlag as resolveFlagSvc, runFraudScan } from "@/lib/services/review";
 import { resolveDispute as resolveDisputeSvc } from "@/lib/services/dispute";
 import { settleDueBookings } from "@/lib/services/settlement";
-import { reviewVerification as reviewVerificationSvc, resolveWithdrawal as resolveWithdrawalSvc } from "@/lib/services/admin";
+import { reviewVerification as reviewVerificationSvc, resolveWithdrawal as resolveWithdrawalSvc, setBaseRate as setBaseRateSvc } from "@/lib/services/admin";
 
 export async function runScan() {
   await requireAdmin();
@@ -47,7 +47,9 @@ export async function reviewVerification(formData: FormData) {
   const userId = String(formData.get("userId") ?? "");
   const decision = String(formData.get("decision")) === "verified" ? "verified" : "rejected";
   const note = String(formData.get("note") ?? "");
-  db.transaction((tx) => reviewVerificationSvc(tx, userId, decision, note, new Date()));
+  const rateRaw = String(formData.get("baseRate") ?? "").trim();
+  const baseRate = rateRaw ? Number(rateRaw) : null;
+  db.transaction((tx) => reviewVerificationSvc(tx, userId, decision, note, new Date(), baseRate));
   revalidatePath("/", "layout");
   redirect("/admin/verifications");
 }
@@ -59,4 +61,13 @@ export async function resolveWithdrawal(formData: FormData) {
   db.transaction((tx) => resolveWithdrawalSvc(tx, id, decision, new Date()));
   revalidatePath("/", "layout");
   redirect("/admin/withdrawals");
+}
+
+export async function setBaseRate(formData: FormData) {
+  await requireAdmin();
+  const userId = String(formData.get("userId") ?? "");
+  const rate = Number(formData.get("baseRate"));
+  const saved = db.transaction((tx) => setBaseRateSvc(tx, userId, rate, new Date()));
+  revalidatePath("/", "layout");
+  redirect(`/admin/specialists?saved=${userId}&rate=${saved}`);
 }

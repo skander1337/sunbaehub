@@ -9,7 +9,8 @@ import { db, schema } from "@/lib/db";
 import { requireSpecialist } from "@/lib/auth";
 import { CATEGORIES } from "@/lib/categories";
 import { postTx } from "@/lib/services/ledger";
-import { isProfileComplete, submitForReview } from "@/lib/services/admin";
+import { submitForReview } from "@/lib/services/admin";
+import { clampBaseRate } from "@/lib/rules/pricing";
 import type { Education, Experience } from "@/db/schema";
 
 const str = (fd: FormData, k: string, max = 200) => String(fd.get(k) ?? "").trim().slice(0, max);
@@ -20,9 +21,9 @@ export async function updateProfile(formData: FormData) {
   const back = intent === "submit" ? "/specialist/onboarding" : "/specialist/profile";
   const headline = str(formData, "headline", 80);
   const bio = str(formData, "bio", 1200);
-  const basePrice = Math.round(Number(formData.get("basePrice")));
+  const requestedRate = clampBaseRate(Number(formData.get("requestedRate")));
   const categories = CATEGORIES.map((c) => c.id).filter((id) => formData.getAll("categories").includes(id));
-  if (headline.length < 2 || bio.length < 10 || !Number.isFinite(basePrice) || basePrice < 10 || basePrice > 1000 || categories.length === 0) {
+  if (headline.length < 2 || bio.length < 10 || categories.length === 0) {
     redirect(`${back}?error=invalid`);
   }
   const education: Education[] = [];
@@ -36,7 +37,7 @@ export async function updateProfile(formData: FormData) {
   if (education.length === 0) redirect(`${back}?error=education_required`);
   if (experience.length === 0) redirect(`${back}?error=experience_required`);
 
-  const patch: Partial<typeof schema.specialistProfiles.$inferInsert> = { headline, bio, basePrice, categories, education, experience };
+  const patch: Partial<typeof schema.specialistProfiles.$inferInsert> = { headline, bio, requestedRate, categories, education, experience };
   const file = formData.get("resume");
   if (!current.resumePath && !(file instanceof File && file.size > 0)) redirect(`${back}?error=resume_required`);
   if (file instanceof File && file.size > 0) {

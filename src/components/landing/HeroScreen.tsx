@@ -17,6 +17,7 @@ export type HeroScreenProps = {
   reviewCount: number;
   avgScore: number;
   won: number;
+  price30: number;
   slots: { label: string; sub: string }[];
 };
 
@@ -91,7 +92,7 @@ export function HeroScreen(p: HeroScreenProps) {
           <div className="tnum text-[32px] leading-none font-extrabold tracking-[-0.03em]">{t("common.creditsN", { n: price })}</div>
           <div className="tnum mt-1.5 text-[13px] text-ink-2">{note}</div>
           <div className="tnum mt-0.5 text-[12px] text-ink-3">
-            ≈ ₩{Math.round(price * p.won).toLocaleString()} · {t("landing.perHour")}
+            ≈ ₩{Math.round(price * p.won).toLocaleString()} · {t("landing.perHour", { n: t("common.creditsN", { n: p.price30 }) })}
           </div>
         </div>
       </div>

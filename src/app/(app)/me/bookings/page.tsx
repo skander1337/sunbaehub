@@ -70,7 +70,7 @@ export default async function MyBookingsPage({ searchParams }: { searchParams: P
                         <span className="muted ml-2 text-[14px] font-medium">{headline}</span>
                       </div>
                       <div className="tnum mt-1 text-[14px] text-ink-2">
-                        {fmtDateTime(b.startAt, locale)} · {categoryLabel(b.category, locale)} · {t("common.creditsN", { n: b.price })}
+                        {fmtDateTime(b.startAt, locale)} · {t("profile.minN", { n: b.durationMin })} · {categoryLabel(b.category, locale)} · {t("common.creditsN", { n: b.price })}
                       </div>
                       {b.seekerNote && <p className="muted mt-2 text-[14px]">“{b.seekerNote}”</p>}
                     </div>
@@ -125,7 +125,7 @@ export default async function MyBookingsPage({ searchParams }: { searchParams: P
                         </Link>
                       </div>
                       <div className="tnum mt-0.5 text-[13.5px] text-ink-2">
-                        {fmtDateTime(b.startAt, locale)} · {categoryLabel(b.category, locale)} · {t("common.creditsN", { n: b.price })}
+                        {fmtDateTime(b.startAt, locale)} · {t("profile.minN", { n: b.durationMin })} · {categoryLabel(b.category, locale)} · {t("common.creditsN", { n: b.price })}
                       </div>
                     </div>
                     <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">

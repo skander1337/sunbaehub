@@ -42,7 +42,7 @@ const b = await mk("seojun@sunbaehub.demo", "sunbae1234", "en"); // specialist, 
 
 // 1) book a session with a cover letter attached
 await a.goto(`${base}/specialists/${seojun.id}`);
-const chip = a.locator(`${bookingForm} button[aria-pressed="false"]`).first();
+const chip = a.locator(`${bookingForm} button.tnum[aria-pressed="false"]`).first(); // first open time chip
 const slotLabel = (await chip.textContent())?.trim();
 await chip.click();
 await a.setInputFiles('input[name="attachment"]', "seed-assets/cv/minjae.pdf");
@@ -51,6 +51,24 @@ await a.waitForURL(/\/me\/bookings\?booked=/, { timeout: 15_000 });
 const bookedId = new URL(a.url()).searchParams.get("booked");
 const afterBooking = new Database("dev.db", { readonly: true }).prepare("select credit_balance as bal from users where id=?").get(jiwoo.id);
 console.log(`PASS booking: slot ${slotLabel} booked with attachment, balance ${jiwoo.bal} → ${afterBooking.bal}`);
+
+// 1b) a 30-minute booking costs half and holds exactly that
+{
+  await a.goto(`${base}/specialists/${seojun.id}`);
+  const before = new Database("dev.db", { readonly: true }).prepare("select credit_balance as bal from users where id=?").get(jiwoo.id).bal;
+  const price60 = new Database("dev.db", { readonly: true }).prepare("select price from bookings where id=?").get(bookedId).price;
+  await a.getByRole("button", { name: /^30분/ }).click();
+  const chip30 = a.locator(`${bookingForm} button.tnum[aria-pressed="false"]`).first();
+  await chip30.click();
+  await a.locator(`${bookingForm} button[type="submit"]`).click();
+  await a.waitForURL(/\/me\/bookings\?booked=/, { timeout: 15_000 });
+  const id30 = new URL(a.url()).searchParams.get("booked");
+  const b30 = new Database("dev.db", { readonly: true }).prepare("select duration_min as d, price, (end_at - start_at) as ms from bookings where id=?").get(id30);
+  const after = new Database("dev.db", { readonly: true }).prepare("select credit_balance as bal from users where id=?").get(jiwoo.id).bal;
+  const expected = Math.max(5, Math.round((price60 * 30) / 60 / 5) * 5);
+  if (b30.d !== 30 || b30.ms !== 30 * 60_000 || b30.price !== expected || before - after !== expected) throw new Error(`30-min booking wrong: ${JSON.stringify({ b30, before, after, expected })}`);
+  console.log(`PASS 30-minute booking: ${b30.price} credits (60-min price ${price60}), window is 30 minutes`);
+}
 
 // 2) the attachment is visible in the room before the session starts; then open the window (dev-only control)
 await a.goto(`${base}/sessions/${bookedId}`);

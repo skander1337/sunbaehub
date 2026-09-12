@@ -8,6 +8,7 @@ import { hashPassword, verifyPassword } from "@/lib/password";
 import { postTx } from "@/lib/services/ledger";
 import { clearSessionCookie, createSession, currentSessionToken, deleteSessionByToken, setSessionCookie } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { BRAND } from "@/lib/brand";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_MIN = 8;
@@ -69,7 +70,7 @@ export async function signup(formData: FormData) {
   try {
     db.transaction((tx) => {
       tx.insert(schema.users).values({ id, name, email, passwordHash: hashPassword(password), isSpecialist: role === "expert", affiliation, createdAt: now }).run();
-      postTx(tx, { userId: id, type: "signup_grant", amount: 200, note: "가입 축하 크레딧", createdAt: now });
+      if (role === "seeker") postTx(tx, { userId: id, type: "signup_grant", amount: BRAND.seekerSignupGrant, note: `가입 축하 크레딧 (${BRAND.trialMinutes}분 상담 1회)`, createdAt: now });
       if (role === "expert") {
         tx.insert(schema.specialistProfiles).values({ userId: id, headline: "", bio: "", categories: [], basePrice: 100, education: [], experience: [], verification: "none" }).run();
       }

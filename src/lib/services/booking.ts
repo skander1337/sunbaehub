@@ -1,7 +1,8 @@
 import { and, eq, inArray } from "drizzle-orm";
 import type { Db, Tx } from "@/db";
 import { availabilityRules, bookings, notifications, specialistProfiles, users, type Booking } from "@/db/schema";
-import { priceFor, priceNote } from "@/lib/rules/pricing";
+import { priceFor, priceForDuration, priceNote } from "@/lib/rules/pricing";
+import { BRAND } from "@/lib/brand";
 import { computeSlots, slotExists } from "@/lib/rules/slots";
 import { cancellationOutcome, refundSplit } from "@/lib/rules/refund";
 import { isParticipant, sessionWindow } from "@/lib/rules/session";
@@ -31,21 +32,23 @@ export function loadAvailability(tx: Tx | Db, specialistId: string, now: Date) {
 
 export function createBooking(
   tx: Tx | Db,
-  input: { seekerId: string; specialistId: string; startAt: Date; category: string; note?: string },
+  input: { seekerId: string; specialistId: string; startAt: Date; category: string; note?: string; durationMin?: number },
   now: Date,
 ): Booking {
+  const durationMin = (BRAND.durations as readonly number[]).includes(input.durationMin ?? 60) ? (input.durationMin ?? 60) : 60;
   if (input.seekerId === input.specialistId) throw new BookingRuleError("own_profile");
   const profile = tx.select().from(specialistProfiles).where(eq(specialistProfiles.userId, input.specialistId)).get();
   if (!profile) throw new SlotUnavailable();
   const { rules, busy } = loadAvailability(tx, input.specialistId, now);
-  const days = computeSlots(rules, busy, now);
+  const days = computeSlots(rules, busy, now, { slotMin: durationMin, stepMin: BRAND.slotStepMinutes });
   if (!slotExists(days, input.startAt)) throw new SlotUnavailable();
 
   const pricing = priceFor(profile.basePrice, profile.reviewCount, profile.avgScore);
-  assertBalance(tx, input.seekerId, pricing.price);
+  const price = priceForDuration(pricing.price, durationMin);
+  assertBalance(tx, input.seekerId, price);
 
   const id = crypto.randomUUID();
-  const endAt = new Date(input.startAt.getTime() + 60 * 60_000);
+  const endAt = new Date(input.startAt.getTime() + durationMin * 60_000);
   tx.insert(bookings)
     .values({
       id,
@@ -54,7 +57,8 @@ export function createBooking(
       category: input.category,
       startAt: input.startAt,
       endAt,
-      price: pricing.price,
+      durationMin,
+      price,
       priceNote: priceNote(pricing, "ko"),
       status: "confirmed",
       seekerNote: input.note?.trim() || null,
@@ -63,7 +67,7 @@ export function createBooking(
     .run();
   const specialist = tx.select({ name: users.name }).from(users).where(eq(users.id, input.specialistId)).get();
   const seeker = tx.select({ name: users.name }).from(users).where(eq(users.id, input.seekerId)).get();
-  postTx(tx, { userId: input.seekerId, type: "booking_hold", amount: -pricing.price, bookingId: id, note: `${specialist?.name ?? ""} 상담 예약`, createdAt: now });
+  postTx(tx, { userId: input.seekerId, type: "booking_hold", amount: -price, bookingId: id, note: `${specialist?.name ?? ""} ${durationMin}분 상담 예약`, createdAt: now });
   tx.insert(notifications).values({ userId: input.seekerId, kind: "booking_created", params: { name: specialist?.name ?? "" }, href: "/me/bookings", createdAt: now }).run();
   tx.insert(notifications).values({ userId: input.specialistId, kind: "booking_created", params: { name: seeker?.name ?? "" }, href: "/specialist/dashboard", createdAt: now }).run();
   return tx.select().from(bookings).where(eq(bookings.id, id)).get()!;

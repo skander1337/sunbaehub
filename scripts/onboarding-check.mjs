@@ -28,6 +28,7 @@ console.log("PASS signup(expert): lands on onboarding");
 // 2) complete the profile with a CV → pending
 await page.fill('input[name="headline"]', "네이버 프론트엔드 개발자 4년");
 await page.fill('textarea[name="bio"]', "네이버에서 프론트엔드를 개발하고 있어요. 포트폴리오와 코딩테스트 준비를 도와드려요.");
+await page.fill('input[name="requestedRate"]', "150");
 await page.locator('label:has(input[name="categories"][value="portfolio"])').click();
 await page.fill('input[name="edu_school_0"]', "고려대학교");
 await page.fill('input[name="edu_major_0"]', "컴퓨터학과");
@@ -58,6 +59,7 @@ await ap.goto(`${base}/admin/verifications`);
 await ap.getByText(expertName).waitFor({ timeout: 10_000 });
 await ap.screenshot({ path: ".impeccable/review/admin-verifications.png", fullPage: true });
 const card = ap.locator("li", { hasText: expertName });
+await card.locator('input[name="baseRate"]').fill("120");
 await card.locator('button[value="verified"]').click();
 await ap.waitForURL(/\/admin\/verifications/, { timeout: 15_000 });
 await ap.waitForTimeout(500);
@@ -69,7 +71,9 @@ await page.goto(`${base}/specialists`);
 await page.locator("main").getByText(expertName).first().waitFor({ timeout: 10_000 });
 await page.goto(`${base}/specialist/dashboard`);
 await page.getByText("인증됨").waitFor({ timeout: 10_000 });
-console.log("PASS listing: approved specialist is public and sees the verified badge");
+const rate = db.prepare("select p.base_price as base, p.requested_rate as req from specialist_profiles p join users u on u.id=p.user_id where u.email=?").get(expertEmail);
+if (rate.base !== 120) throw new Error(`admin base rate not applied: ${JSON.stringify(rate)}`);
+console.log(`PASS listing: approved specialist is public with the admin-set base rate ${rate.base} (requested ${rate.req})`);
 
 // 6) seeker sign-up with affiliation
 const sp = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
@@ -81,7 +85,7 @@ await sp.fill('input[name="affiliation"]', "고려대학교 경제학과 3학년
 await sp.click('form button[type="submit"]');
 await sp.waitForURL(/\/specialists$/, { timeout: 15_000 });
 const seeker = db.prepare("select affiliation, credit_balance as bal from users where email=?").get(seekerEmail);
-if (seeker.affiliation !== "고려대학교 경제학과 3학년" || seeker.bal !== 200) throw new Error(`seeker row wrong: ${JSON.stringify(seeker)}`);
-console.log("PASS signup(seeker): affiliation stored, 200 welcome credits, lands on the directory");
+if (seeker.affiliation !== "고려대학교 경제학과 3학년" || seeker.bal !== 70) throw new Error(`seeker row wrong: ${JSON.stringify(seeker)}`);
+console.log("PASS signup(seeker): affiliation stored, 70 welcome credits (one 30-minute session), lands on the directory");
 
 await browser.close();

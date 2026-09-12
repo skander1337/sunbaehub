@@ -21,8 +21,9 @@ export async function createBooking(formData: FormData) {
   const startAt = new Date(String(formData.get("startAt") ?? ""));
   const category = String(formData.get("category") ?? "");
   const note = String(formData.get("note") ?? "");
+  const durationMin = Number(formData.get("durationMin") ?? 60);
   const back = `/specialists/${specialistId}`;
-  if (!specialistId || Number.isNaN(startAt.getTime()) || !category) fail(back, "invalid");
+  if (!specialistId || Number.isNaN(startAt.getTime()) || !category || !(durationMin === 30 || durationMin === 60)) fail(back, "invalid");
   const attachment = formData.get("attachment");
   const hasFile = attachment instanceof File && attachment.size > 0;
   if (hasFile) {
@@ -36,7 +37,7 @@ export async function createBooking(formData: FormData) {
   }
   let id = "";
   try {
-    id = db.transaction((tx) => createBookingSvc(tx, { seekerId: user.id, specialistId, startAt, category, note }, new Date())).id;
+    id = db.transaction((tx) => createBookingSvc(tx, { seekerId: user.id, specialistId, startAt, category, note, durationMin }, new Date())).id;
   } catch (e) {
     if (e instanceof SlotUnavailable) fail(back, "slot");
     if (e instanceof InsufficientCredits) fail(back, "credits");

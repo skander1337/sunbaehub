@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
-import { priceFor, priceNote, type PriceBreakdown } from "@/lib/rules/pricing";
+import { priceFor, priceForDuration, priceNote, type PriceBreakdown } from "@/lib/rules/pricing";
 import { isRanked } from "@/lib/rules/ranking";
 import type { Locale } from "@/lib/i18n/dictionary";
 
@@ -16,6 +16,7 @@ export type SpecialistCardData = {
   verification: string;
   ranked: boolean;
   pricing: PriceBreakdown;
+  price30: number;
   note: Record<Locale, string>;
 };
 
@@ -33,6 +34,7 @@ const toCard = (u: { id: string; name: string }, p: typeof schema.specialistProf
     verification: p.verification,
     ranked: isRanked(p.reviewCount),
     pricing,
+    price30: priceForDuration(pricing.price, 30),
     note: { ko: priceNote(pricing, "ko"), en: priceNote(pricing, "en") },
   };
 };

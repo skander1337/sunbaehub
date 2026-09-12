@@ -9,20 +9,26 @@ export type PickerDay = { dateKey: string; dayName: string; dateLabel: string; i
 
 export function SlotPicker(props: {
   specialistId: string;
-  days: PickerDay[];
-  price: number;
+  days: PickerDay[]; // 60-minute sessions
+  days30: PickerDay[]; // 30-minute sessions
+  price: number; // 60 minutes
+  price30: number;
   balance: number | null;
   categories: { id: string; label: string }[];
   loginHref: string;
   disabled?: boolean;
 }) {
   const { t } = useI18n();
-  const firstWithSlots = props.days.findIndex((d) => d.slots.length > 0);
+  const affordable60 = props.balance === null || props.balance >= props.price;
+  const [duration, setDuration] = useState<30 | 60>(affordable60 ? 60 : 30);
+  const days = duration === 60 ? props.days : props.days30;
+  const price = duration === 60 ? props.price : props.price30;
+  const firstWithSlots = days.findIndex((d) => d.slots.length > 0);
   const [dayIdx, setDayIdx] = useState(firstWithSlots >= 0 ? firstWithSlots : 0);
   const [slot, setSlot] = useState<string | null>(null);
   const [category, setCategory] = useState(props.categories[0]?.id ?? "");
-  const day = props.days[dayIdx];
-  const after = useMemo(() => (props.balance === null ? null : props.balance - props.price), [props.balance, props.price]);
+  const day = days[dayIdx];
+  const after = useMemo(() => (props.balance === null ? null : props.balance - price), [props.balance, price]);
   const canSubmit = !!slot && !!category && props.balance !== null && after !== null && after >= 0 && !props.disabled;
 
   return (
@@ -30,11 +36,42 @@ export function SlotPicker(props: {
       <input type="hidden" name="specialistId" value={props.specialistId} />
       <input type="hidden" name="startAt" value={slot ?? ""} />
       <input type="hidden" name="category" value={category} />
+      <input type="hidden" name="durationMin" value={duration} />
+
+      <div>
+        <div className="mb-2 text-[13px] font-semibold text-ink-3">{t("profile.duration")}</div>
+        <div className="grid grid-cols-2 gap-2">
+          {([30, 60] as const).map((m) => {
+            const active = duration === m;
+            const p = m === 60 ? props.price : props.price30;
+            return (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={active}
+                onClick={() => {
+                  setDuration(m);
+                  setSlot(null);
+                  const nd = m === 60 ? props.days : props.days30;
+                  const i = nd.findIndex((d) => d.slots.length > 0);
+                  setDayIdx(i >= 0 ? i : 0);
+                }}
+                className={`flex items-baseline justify-between rounded-[12px] border px-4 py-3 text-left transition-colors duration-150 ${
+                  active ? "border-brand bg-brand-tint text-brand-deep" : "border-line bg-paper text-ink hover:border-brand"
+                }`}
+              >
+                <span className="text-[15px] font-bold">{m === 30 ? t("profile.min30") : t("profile.min60")}</span>
+                <span className="tnum text-[13.5px] font-semibold">{t("common.creditsN", { n: p })}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <div>
         <div className="mb-2 text-[13px] font-semibold text-ink-3">{t("profile.pickDay")}</div>
         <div className="-mx-1 flex min-w-0 gap-1.5 overflow-x-auto px-1 pb-1" role="tablist">
-          {props.days.map((d, i) => {
+          {days.map((d, i) => {
             const active = i === dayIdx;
             const empty = d.slots.length === 0;
             return (
@@ -131,8 +168,8 @@ export function SlotPicker(props: {
 
       <div className="hairline pt-5">
         <div className="flex items-center justify-between text-[14px]">
-          <span className="muted">{t("profile.priceTitle")}</span>
-          <span className="tnum font-bold">{t("common.creditsN", { n: props.price })}</span>
+          <span className="muted">{t("profile.sessionN", { n: duration })}</span>
+          <span className="tnum font-bold">{t("common.creditsN", { n: price })}</span>
         </div>
         {props.balance !== null && after !== null && (
           <div className="mt-1.5 flex items-center justify-between text-[14px]">
@@ -154,7 +191,7 @@ export function SlotPicker(props: {
             <IconArrow size={18} />
           </button>
         )}
-        <p className="mt-3 text-[12.5px] leading-relaxed text-ink-3">{t("profile.hold", { n: props.price })}</p>
+        <p className="mt-3 text-[12.5px] leading-relaxed text-ink-3">{t("profile.hold", { n: price })}</p>
       </div>
     </form>
   );

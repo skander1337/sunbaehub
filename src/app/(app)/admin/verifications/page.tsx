@@ -4,6 +4,7 @@ import { getT } from "@/lib/i18n/server";
 import { categoryLabel } from "@/lib/categories";
 import { fmtDateTime } from "@/lib/seoul";
 import { reviewVerification } from "@/app/actions/admin";
+import { MIN_BASE_RATE, MAX_BASE_RATE } from "@/lib/rules/pricing";
 
 export default async function VerificationsPage() {
   const { t, locale } = await getT();
@@ -53,6 +54,11 @@ export default async function VerificationsPage() {
                 )}
                 <form action={reviewVerification} className="flex w-full flex-col gap-2 sm:max-w-xl">
                   <input type="hidden" name="userId" value={u.id} />
+                  <label htmlFor={`rate-${u.id}`} className="text-[12.5px] font-semibold text-ink-3">
+                    {t("admin.baseRate")} <span className="tnum font-medium text-ink-3">· {t("admin.requested")} {p.requestedRate ?? "–"}</span>
+                  </label>
+                  <input id={`rate-${u.id}`} name="baseRate" type="number" min={MIN_BASE_RATE} max={MAX_BASE_RATE} step={5} defaultValue={p.requestedRate ?? 100} className="field tnum h-10 max-w-[200px]" />
+                  <p className="text-[12px] text-ink-3">{t("admin.rateHint", { n: MIN_BASE_RATE })}</p>
                   <label htmlFor={`note-${u.id}`} className="text-[12.5px] font-semibold text-ink-3">{t("admin.rejectNote")}</label>
                   <input id={`note-${u.id}`} name="note" maxLength={500} placeholder={t("admin.noteHint")} className="field h-10" />
                   <div className="flex gap-2">

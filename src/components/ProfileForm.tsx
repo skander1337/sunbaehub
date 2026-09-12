@@ -2,6 +2,7 @@ import { getT } from "@/lib/i18n/server";
 import { CATEGORIES } from "@/lib/categories";
 import { updateProfile } from "@/app/actions/specialist";
 import type { SpecialistProfile } from "@/db/schema";
+import { MAX_BASE_RATE, MIN_BASE_RATE } from "@/lib/rules/pricing";
 
 /** Shared specialist profile form. mode="onboarding" submits for review; mode="edit" just saves. */
 export async function ProfileForm({ profile, userId, mode }: { profile: SpecialistProfile; userId: string; mode: "edit" | "onboarding" }) {
@@ -36,9 +37,14 @@ export async function ProfileForm({ profile, userId, mode }: { profile: Speciali
           </div>
         </fieldset>
         <div>
-          <label htmlFor="basePrice" className={label}>{t("sp.profile.basePrice")}</label>
-          <input id="basePrice" name="basePrice" type="number" min={10} max={1000} step={5} defaultValue={profile.basePrice} required className="field tnum max-w-[200px]" />
-          <p className="mt-1.5 text-[12.5px] text-ink-3">{t("sp.profile.basePriceHint")}</p>
+          <label htmlFor="requestedRate" className={label}>{t("sp.profile.requestedRate")}</label>
+          <input id="requestedRate" name="requestedRate" type="number" min={MIN_BASE_RATE} max={MAX_BASE_RATE} step={5} defaultValue={profile.requestedRate ?? profile.basePrice} required className="field tnum max-w-[200px]" />
+          <p className="mt-1.5 text-[12.5px] text-ink-3">{t("sp.profile.requestedRateHint")}</p>
+          {profile.verification === "verified" && (
+            <p className="tnum mt-2 text-[13px] font-semibold text-ink-2">
+              {t("sp.profile.currentBase")}: {profile.basePrice}
+            </p>
+          )}
         </div>
       </section>
 

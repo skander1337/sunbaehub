@@ -40,7 +40,8 @@ export const specialistProfiles = sqliteTable("specialist_profiles", {
   headline: text("headline").notNull(),
   bio: text("bio").notNull(),
   categories: text("categories", { mode: "json" }).$type<string[]>().notNull(),
-  basePrice: integer("base_price").notNull(), // credits per 60-min session
+  basePrice: integer("base_price").notNull(), // credits per 60-min session, set by admins (floor MIN_BASE_RATE)
+  requestedRate: integer("requested_rate"), // what the specialist asked for during onboarding
   education: text("education", { mode: "json" }).$type<Education[]>().notNull(),
   experience: text("experience", { mode: "json" }).$type<Experience[]>().notNull(),
   resumePath: text("resume_path"),
@@ -69,7 +70,8 @@ export const bookings = sqliteTable(
     category: text("category").notNull(),
     startAt: ts("start_at").notNull(),
     endAt: ts("end_at").notNull(),
-    price: integer("price").notNull(), // dynamic price snapshot
+    durationMin: integer("duration_min").notNull().default(60), // 30 | 60
+    price: integer("price").notNull(), // dynamic price snapshot for this duration
     priceNote: text("price_note").notNull(),
     status: text("status").notNull().default("confirmed"), // confirmed | in_progress | completed | cancelled | disputed | refunded
     seekerNote: text("seeker_note"),

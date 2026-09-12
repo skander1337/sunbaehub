@@ -22,7 +22,7 @@ export default async function LandingPage() {
   const slots = featured
     ? (() => {
         const { rules, busy } = getAvailabilityInputs(featured.id, now);
-        return computeSlots(rules, busy, now, { days: 14 })
+        return computeSlots(rules, busy, now, { days: 14, slotMin: 60, stepMin: BRAND.slotStepMinutes })
           .flatMap((d) => d.slots)
           .slice(0, 3)
           .map((s) => {
@@ -101,6 +101,7 @@ export default async function LandingPage() {
             reviewCount={featured.reviewCount}
             avgScore={featured.avgScore}
             won={BRAND.creditsToWon}
+            price30={featured.price30}
             slots={slots}
           />
         </div>
