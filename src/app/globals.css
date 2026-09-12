@@ -162,3 +162,14 @@ a {
     }
   }
 }
+
+@media print {
+  header,
+  footer,
+  .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
